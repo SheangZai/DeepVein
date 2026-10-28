@@ -238,13 +238,14 @@ export const words: PromptSource[] = [
       'Austin', 'Rover', 'Jensen', 'Noble', 'Ginetta', 'Hennessey', 'SSC', 'Zenvo', 'Spyker',
     ],
     ruby: [
-      'Hispano-Suiza', 'Lagonda', 'Iso', 'Tatra', 'Trabant', 'Wartburg', 'Zastava', 'Yugo',
+      'Lagonda', 'Iso', 'Tatra', 'Trabant', 'Wartburg', 'Zastava', 'Yugo',
       'Moskvitch', 'GAZ', 'UAZ', 'ZIL', 'Studebaker', 'Packard', 'Tucker', 'Hudson', 'Nash',
       'Delahaye', 'Ruf', 'Gumpert', 'W Motors', 'Vencer', 'Saleen', 'Vector', 'Panoz', 'Mosler',
       'Marcos', 'Reliant', 'Bristol', 'Morris', 'Hillman', 'Riley', 'Wolseley', 'Sunbeam', 'Talbot',
       'Simca', 'Facel Vega', 'Borgward', 'NSU', 'Horch', 'Auto Union', 'DKW', 'Steyr', 'Innocenti',
       'Autobianchi', 'Bizzarrini', 'Cizeta', 'De Tomaso', 'Hindustan', 'Karma', 'Faraday Future',
+      'Bufori',
     ],
-    diamond: 'Bufori',
+    diamond: 'Hispano-Suiza',
   },
 ];

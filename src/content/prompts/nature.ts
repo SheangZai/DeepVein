@@ -93,14 +93,15 @@ export const nature: PromptSource[] = [
     ],
     ruby: [
       'Shikoku', 'Kishu', 'Kai Ken', 'Beauceron', 'Spanish Water Dog', 'Harrier', 'Otterhound',
-      'Ibizan Hound', 'Azawakh', 'Sloughi', "Cirneco dell'Etna", 'Bergamasco', 'Bolognese', 'Löwchen|Lowchen',
+      'Ibizan Hound', 'Sloughi', "Cirneco dell'Etna", 'Bergamasco', 'Bolognese', 'Löwchen|Lowchen',
       'Cardigan Welsh Corgi', 'Dandie Dinmont Terrier', 'Sealyham Terrier', 'Skye Terrier', 'Cesky Terrier',
       'Glen of Imaal Terrier', 'Manchester Terrier', 'Silky Terrier', 'Catahoula|Catahoula Leopard Dog',
       'Mudi', 'Pumi', 'Kintamani', 'Phu Quoc Ridgeback', 'Aspin', 'Bully Kutta', 'Rajapalayam',
       'Mudhol Hound', 'Chippiparai', 'Kombai', 'Norwegian Lundehund|Lundehund', 'Stabyhoun',
       'Kooikerhondje', 'Swedish Vallhund', 'Peruvian Inca Orchid', 'Carolina Dog', 'New Guinea Singing Dog',
+      'Telomian',
     ],
-    diamond: 'Telomian',
+    diamond: 'Azawakh',
   },
   {
     id: 'flightless-birds',

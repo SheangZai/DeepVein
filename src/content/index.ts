@@ -26,10 +26,15 @@ if (__DEV__ && BUILD_ISSUES.length > 0) {
   console.warn('Prompt content issues:\n' + BUILD_ISSUES.map((i) => `${i.promptId}: ${i.message}`).join('\n'));
 }
 
+/** Prompts removed from the game still appear in old saved results. */
+function retiredPrompt(id: string): Prompt {
+  const stub = buildPrompt({ id, category: 'words', text: 'A retired prompt', diamond: '—' });
+  BY_ID.set(id, stub);
+  return stub;
+}
+
 export function getPrompt(id: string): Prompt {
-  const p = BY_ID.get(id);
-  if (!p) throw new Error(`Unknown prompt ${id}`);
-  return p;
+  return BY_ID.get(id) ?? retiredPrompt(id);
 }
 
 export const CATEGORY_LABELS: Record<CategoryId, string> = {

@@ -229,12 +229,12 @@ export const screen: PromptSource[] = [
     ],
     ruby: [
       'Uilleann pipes', 'Morin khuur|Horsehead fiddle', 'Kora', 'Mbira', 'Talking drum',
-      'Nyckelharpa', 'Ondes Martenot', 'Glass harmonica|Armonica', 'Serpent', 'Ophicleide', 'Crwth',
+      'Nyckelharpa', 'Glass harmonica|Armonica', 'Serpent', 'Ophicleide', 'Crwth',
       'Hardanger fiddle', 'Kantele', 'Gusli', 'Sarangi', 'Shehnai', 'Duduk', 'Zurna',
       'Bodhrán|Bodhran', 'Clavichord', 'Rebab', 'Gambus', 'Kulintang', 'Sasando', 'Sompoton',
-      'Seruling', 'Hulusi', 'Guqin', 'Biwa', 'Cimbalom', 'Psaltery', 'Sackbut', 'Shawm',
+      'Seruling', 'Sape|Sapeh|Sampeh', 'Hulusi', 'Guqin', 'Biwa', 'Cimbalom', 'Psaltery', 'Sackbut', 'Shawm',
       'Crumhorn', 'Theorbo', 'Viola da gamba|Viol', 'Tromba marina', 'Contrabassoon',
     ],
-    diamond: 'Sape|Sapeh|Sampeh',
+    diamond: 'Ondes Martenot',
   },
 ];

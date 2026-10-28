@@ -52,7 +52,7 @@ export const SHAFTS: Shaft[] = [
     category: 'food',
     title: 'Kitchen Shaft',
     emoji: '🍜',
-    blurb: 'Malaysian dishes, fruits, cheeses and kopi.',
+    blurb: 'Southeast Asian dishes, fruits, cheeses and kopi.',
     levels: 4,
   },
   {
