@@ -1,56 +1,58 @@
-# Welcome to your Expo app 👋
+# Deepvein
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A daily trivia dig for iOS and Android. You get 7 prompts with 25 seconds each. Any correct answer counts, and rarer answers dig deeper. Built with Expo (React Native).
 
-## Get started
+## Features
 
-1. Install dependencies
+| Feature | Where |
+|---|---|
+| Daily Dig: same 7 prompts for everyone, resets at midnight UTC+8 | `src/app/dig.tsx`, `src/game/schedule.ts` |
+| Tiers: Dirt 10 · Fool's Gold 15 · Copper 30 · Emerald 60 · Ruby 85 · 💎 Diamond 100 | `src/game/tiers.ts` |
+| Lenient matching: typos, aliases, plurals, never across numbers | `src/game/match.ts` |
+| Emoji share grid, streaks, streak buddies, gem count | `src/lib/progress.ts`, `src/components/results-view.tsx` |
+| Unlimited digs, the full Archive, and Shafts (themed packs). Everything is free for now. | `src/app/*.tsx` |
+| Friends by code, global "deeper than X%" rank, friends' answers | `src/lib/social.ts`, `supabase/schema.sql` |
+| **TNT Toss** multiplayer: public quick play, private rooms, pass-and-play | `src/game/tnt.ts`, `src/hooks/use-online-room.ts` |
 
-   ```bash
-   npm install
-   ```
+Everything works offline except friends, ranks and online TNT Toss. Those switch on when the Supabase env vars are set.
 
-2. Start the app
+## Run it
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Requires **Node 22.13+** (React Native 0.88). Then:
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # scan the QR code with Expo Go, or press w for web
+npm test                # content checks + game engine simulation
+npm run typecheck && npx expo lint
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Turn on online features (Supabase, free tier is fine)
 
-### Other setup steps
+1. Create a project at supabase.com.
+2. In the SQL Editor, run `supabase/schema.sql`.
+3. Go to Authentication → Sign In / Providers and enable **Anonymous sign-ins**.
+4. Copy `.env.example` to `.env` and fill in `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Multiplayer uses Supabase Realtime (presence plus broadcast). The longest-connected player's phone runs the game. If the host leaves, the next player takes over automatically.
 
-## Learn more
+## Ship to the stores
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest build --platform all --profile production
+npx eas-cli@latest submit --platform ios      # needs an Apple Developer account ($99/yr)
+npx eas-cli@latest submit --platform android  # needs a Google Play Console account ($25 once)
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Before submitting:
 
-## Join the community
+- Replace the placeholder icons and splash in `assets/`, and the bundle id `com.deepvein.app` in `app.json`.
+- Publish a privacy policy URL. The app stores an anonymous id, display name, scores and answers.
+- In-app account deletion is already included (Miner → "Delete my online data"), which Apple requires.
 
-Join our community of developers creating universal apps.
+## Adding content
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Prompts live in `src/content/prompts/*.ts`. Each answer is `"Canonical|alias|alias"`, placed in exactly one tier list, and each prompt has exactly one `diamond`. Anything not listed counts as a miss, so be thorough with closed sets. Run `npm test` after editing. It catches alias collisions, wrong counts for closed sets, and matching regressions.
+
+The daily schedule cycles through every prompt before repeating any. With 40 prompts that's about 6 days per cycle, so **more prompts are the top priority before launch**. Shafts currently have 3 levels each; raise `levels` in `src/content/shafts.ts` as categories grow.

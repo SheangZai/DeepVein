@@ -1,0 +1,110 @@
+import type { PromptSource } from '../types';
+
+export const food: PromptSource[] = [
+  {
+    id: 'pasta',
+    category: 'food',
+    text: 'Name a pasta shape',
+    dirt: ['Spaghetti', 'Penne', 'Macaroni', 'Lasagna|Lasagne'],
+    fools: ['Orzo'],
+    copper: [
+      'Fettuccine|Fettucine|Fettuccini', 'Linguine|Linguini', 'Ravioli', 'Fusilli',
+      'Farfalle|Bow tie|Bowtie', 'Rigatoni', 'Tortellini', 'Gnocchi', 'Tagliatelle', 'Rotini',
+      'Ziti', 'Cannelloni', 'Vermicelli', 'Capellini|Angel hair',
+    ],
+    emerald: [
+      'Orecchiette', 'Pappardelle', 'Conchiglie|Shells', 'Bucatini', 'Ditalini', 'Gemelli',
+      'Cavatappi', 'Manicotti', 'Tortelloni', 'Paccheri', 'Radiatori', 'Campanelle',
+      'Strozzapreti', 'Agnolotti', 'Mafaldine|Mafalda', 'Trofie', 'Cavatelli', 'Stelline',
+      'Anelli', 'Ruote|Wagon wheels', 'Garganelli', 'Pici', 'Bigoli', 'Casarecce', 'Lumache',
+      'Fregola|Fregula', 'Spaghettini',
+    ],
+    ruby: [
+      'Corzetti', 'Lorighittas', 'Busiate', 'Testaroli', 'Cappelletti', 'Mezzelune',
+      'Culurgiones', 'Scialatielli', 'Fileja', 'Rotelle',
+    ],
+    diamond: 'Su filindeu|Filindeu',
+  },
+  {
+    id: 'malaysian-food',
+    category: 'food',
+    text: 'Name a Malaysian dish',
+    dirt: [
+      'Nasi Lemak', 'Roti Canai|Roti Prata', 'Satay|Sate', "Char Kway Teow|Char Kuey Teow|CKT",
+    ],
+    copper: [
+      'Rendang|Beef rendang', 'Laksa', 'Mee Goreng|Mee goreng mamak', 'Nasi Goreng',
+      'Hainanese Chicken Rice|Chicken rice|Nasi ayam', 'Bak Kut Teh', 'Nasi Kandar',
+      'Cendol|Chendol', 'Roti John', 'Murtabak|Martabak', 'Wantan Mee|Wonton mee|Wan tan mee',
+      'Hokkien Mee', 'Curry Mee|Curry laksa', 'Asam Laksa|Assam laksa', 'Lok Lok',
+      'Apam Balik', 'Ais Kacang|ABC|Air batu campur', 'Mee Rebus', 'Popiah', 'Yong Tau Foo',
+      'Lontong', 'Ketupat', 'Pisang Goreng|Banana fritters', 'Nasi Kerabu', 'Rojak|Pasembur',
+    ],
+    emerald: [
+      'Nasi Dagang', 'Nasi Campur', 'Ikan Bakar', 'Sambal Udang', 'Otak-otak', 'Pan Mee',
+      'Chee Cheong Fun', 'Claypot Chicken Rice', 'Mee Siam', 'Ayam Percik', 'Laksam',
+      'Sang Har Mee', 'Kolo Mee', 'Sarawak Laksa', 'Kuih Lapis', 'Onde-onde|Ondeh ondeh',
+      'Kaya Toast|Roti bakar kaya', 'Lemang', 'Bubur Lambuk', 'Keropok Lekor', 'Pulut Inti',
+      'Mee Bandung', 'Gulai Kawah', 'Masak Lemak Cili Api', 'Sup Tulang', 'Soto|Soto ayam',
+      'Nasi Ulam', 'Roti Jala', 'Satay Celup', 'Tau Fu Fa', 'Lor Mee', 'Hakka Mee',
+      'Kuih Bahulu|Bahulu',
+    ],
+    ruby: [
+      'Linut|Ambuyat', 'Umai', 'Manok Pansuh|Ayam pansuh', 'Tuaran Mee', 'Midin', 'Bosou',
+      'Pinjaram', 'Putu Piring', 'Gulai Tempoyak|Ikan patin masak tempoyak',
+    ],
+    diamond: 'Hinava',
+  },
+  {
+    id: 'spices',
+    category: 'food',
+    text: 'Name a spice',
+    dirt: ['Cinnamon', 'Pepper|Black pepper'],
+    fools: ['Saffron'],
+    copper: [
+      'Cumin', 'Turmeric', 'Ginger', 'Paprika', 'Nutmeg', 'Cloves|Clove', 'Cardamom',
+      'Chilli|Chili|Chilli powder|Chili powder', 'Coriander|Coriander seed', 'Star Anise',
+      'Fennel|Fennel seed', 'Mustard seed|Mustard', 'Vanilla', 'Allspice', 'Cayenne',
+    ],
+    emerald: [
+      'Fenugreek', 'Sumac', 'Caraway', 'Asafoetida|Hing', 'Mace', 'Juniper|Juniper berries',
+      'Annatto|Achiote', 'Galangal', 'Nigella|Black seed|Kalonji', 'Ajwain|Carom',
+      'Anise|Aniseed', 'Celery seed', 'Dill seed', 'Pink peppercorn',
+      'Sichuan pepper|Szechuan pepper', 'Tamarind', 'Garam masala', 'Five-spice|Five spice',
+      "Za'atar|Zaatar", 'Chipotle', 'White pepper',
+    ],
+    ruby: [
+      'Grains of paradise', 'Long pepper', 'Mahlab|Mahleb', 'Kokum', 'Anardana',
+      'Black cardamom', 'Dried lime|Loomi', 'Amchur|Amchoor|Mango powder',
+    ],
+    diamond: 'Cubeb',
+  },
+  {
+    id: 'cheese',
+    category: 'food',
+    text: 'Name a type of cheese',
+    dirt: ['Cheddar', 'Mozzarella', 'Parmesan|Parmigiano Reggiano|Parmigiano'],
+    fools: ['Casu marzu'],
+    copper: [
+      'Brie', 'Camembert', 'Gouda', 'Feta', 'Cream cheese', 'Ricotta', 'Mascarpone',
+      'Gorgonzola', 'Roquefort', 'Stilton', 'Blue cheese|Bleu cheese|Blue',
+      'Emmental|Emmentaler|Swiss|Swiss cheese', 'Gruyère|Gruyere', 'Halloumi', 'Provolone',
+      'Monterey Jack|Jack', 'Colby', 'Edam', 'Cottage cheese', 'Paneer',
+      'Pecorino|Pecorino Romano', 'Manchego', 'Burrata', 'Havarti', 'Muenster|Munster',
+      'American cheese|American', 'Goat cheese|Chèvre|Chevre',
+    ],
+    emerald: [
+      'Taleggio', 'Fontina', 'Comté|Comte', 'Raclette', 'Reblochon', 'Époisses|Epoisses',
+      'Limburger', 'Jarlsberg', 'Wensleydale', 'Red Leicester', 'Double Gloucester', 'Asiago',
+      'Boursin', 'Queso fresco', 'Cotija', 'Oaxaca|Quesillo', 'Leerdammer', 'Port Salut',
+      'Grana Padano', 'Labneh', 'Stracciatella', 'Scamorza', 'Caciocavallo', 'Manouri',
+      'Kefalotyri', 'Tilsit|Tilsiter',
+    ],
+    ruby: [
+      'Pule', 'Vacherin|Vacherin Mont d’Or', 'Stinking Bishop', 'Brunost|Gjetost', 'Bryndza',
+      'Tête de Moine|Tete de Moine', 'Cantal', 'Ossau-Iraty', 'Morbier', 'Saint-Nectaire',
+      'Chaource', 'Lancashire', 'Cheshire', 'Caerphilly', 'Shropshire Blue', 'Cambozola',
+    ],
+    diamond: 'Mimolette',
+  },
+];
