@@ -55,4 +55,6 @@ Before submitting:
 
 Prompts live in `src/content/prompts/*.ts`. Each answer is `"Canonical|alias|alias"`, placed in exactly one tier list, and each prompt has exactly one `diamond`. Anything not listed counts as a miss, so be thorough with closed sets. Run `npm test` after editing. It catches alias collisions, wrong counts for closed sets, and matching regressions.
 
-The daily schedule cycles through every prompt before repeating any. With 40 prompts that's about 6 days per cycle, so **more prompts are the top priority before launch**. Shafts currently have 3 levels each; raise `levels` in `src/content/shafts.ts` as categories grow.
+The daily schedule cycles through every prompt before repeating any. With 75 prompts that's about 10 days per cycle, so more prompts are still the top priority before launch. There is one shaft per category; raise `levels` in `src/content/shafts.ts` as categories grow.
+
+When players report a correct answer that was marked as a miss, add it as an alias (`"Canonical|alias"`) or a new entry, and add a line to `MATCH_CASES` in `scripts/validate-content.ts` so it stays fixed.

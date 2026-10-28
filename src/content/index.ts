@@ -39,7 +39,7 @@ export const CATEGORY_LABELS: Record<CategoryId, string> = {
   screen: 'Screen & Music',
   food: 'Food',
   nature: 'Nature',
-  words: 'Words & History',
+  words: 'Culture & History',
 };
 
 export function promptsInCategory(category: CategoryId): Prompt[] {
