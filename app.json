@@ -46,6 +46,17 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "82236331-ce4a-49ce-afbd-ac39f4046eea"
+      }
+    },
+    "owner": "timothylam3"
   }
 }
