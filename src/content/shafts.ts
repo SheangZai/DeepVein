@@ -71,6 +71,14 @@ export const SHAFTS: Shaft[] = [
     blurb: 'Gods, presidents, colours and car brands.',
     levels: 5,
   },
+  {
+    id: 'everyday',
+    category: 'everyday',
+    title: 'Everyday Shaft',
+    emoji: '🧺',
+    blurb: 'Makeup, maths, jobs, snacks and everything around the house.',
+    levels: 6,
+  },
 ];
 
 export function getShaft(id: string): Shaft | undefined {

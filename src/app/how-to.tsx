@@ -2,7 +2,8 @@ import { StyleSheet, Text } from 'react-native';
 
 import { Body, Card, Heading, Muted, Row, Screen, TierChip } from '@/components/ui';
 import { RESET_UTC_OFFSET_HOURS } from '@/game/schedule';
-import { ANSWER_TIERS, BUDDIES, MAX_DEPTH, METERS_PER_POINT, PROMPTS_PER_DIG, SECONDS_PER_PROMPT, TIERS } from '@/game/tiers';
+import { START_FUSE_MS, MIN_FUSE_MS } from '@/game/tnt';
+import { ANSWER_TIERS, BUDDIES, DIG_LIVES, METERS_PER_POINT, SECONDS_PER_PROMPT, TIERS } from '@/game/tiers';
 import { C, F, S } from '@/theme';
 
 export default function HowTo() {
@@ -11,13 +12,17 @@ export default function HowTo() {
       <Card>
         <Heading>The daily dig</Heading>
         <Body>
-          Everyone gets the same {PROMPTS_PER_DIG} prompts each day. You have {SECONDS_PER_PROMPT} seconds to
-          name anything that fits. Every correct answer counts, but the rarer it is, the deeper you dig.
+          Everyone digs through the same prompts in the same order each day, for as long as they like. You have{' '}
+          {SECONDS_PER_PROMPT} seconds per prompt to name anything that fits. Every correct answer counts, but the
+          rarer it is, the deeper you dig.
+        </Body>
+        <Body>
+          You have {DIG_LIVES} lives. A wrong answer, a pass or a burnt-out fuse costs one. Lose them all and the
+          tunnel caves in, or end the dig whenever you like.
         </Body>
         <Muted>
           New dig every midnight (UTC{RESET_UTC_OFFSET_HOURS >= 0 ? '+' : ''}
-          {RESET_UTC_OFFSET_HOURS}). Each point is {METERS_PER_POINT} m; a perfect dig reaches{' '}
-          {MAX_DEPTH.toLocaleString()} m.
+          {RESET_UTC_OFFSET_HOURS}). Each point is {METERS_PER_POINT} m.
         </Muted>
       </Card>
 
@@ -54,9 +59,10 @@ export default function HowTo() {
       <Card>
         <Heading>TNT Toss</Heading>
         <Body>
-          Multiplayer for 2–8 miners. Name an answer that fits the category to pass the lit TNT. Repeats don’t
-          count, and the fuse gets shorter every pass. If it blows on you, you lose a heart. Last miner
-          standing wins.
+          Multiplayer for 2–8 miners. Name an answer that fits the category to pass the lit TNT. Wrong answers
+          and repeats don’t count, but you can keep trying until the fuse runs out. The fuse starts at{' '}
+          {START_FUSE_MS / 1000} seconds and gets shorter with every pass, down to {MIN_FUSE_MS / 1000}. If it
+          blows on you, you lose a heart and a new category starts. Last miner standing wins.
         </Body>
       </Card>
     </Screen>

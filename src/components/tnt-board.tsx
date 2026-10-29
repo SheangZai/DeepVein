@@ -75,13 +75,19 @@ export function TntBoard({
     setText('');
   };
 
+  // A rejected answer leaves the TNT with the same player, who can try again.
+  const e = state.lastEvent;
+  const retry = playing && e?.kind === 'reject' && e.playerId === state.turn ? e : null;
+  const mine = myTurn && myId !== null;
   const status = boomed
     ? `BOOM! ${boomed.name} got caught`
-    : playing
-      ? myTurn && myId !== null
-        ? 'You’re holding the TNT!'
-        : `${holder?.name ?? '…'} is up`
-      : '';
+    : retry
+      ? `${mine ? '' : `${holder?.name ?? '…'}: `}${retry.reason === 'used' ? `${retry.text} was already said` : `“${retry.text}” doesn’t fit`}. ${mine ? 'Try again!' : 'Still holding it…'}`
+      : playing
+        ? mine
+          ? 'You’re holding the TNT!'
+          : `${holder?.name ?? '…'} is up`
+        : '';
 
   return (
     <TntScreen
@@ -125,7 +131,9 @@ export function TntBoard({
       <CategoryBanner state={state} />
       {notice && <Text style={styles.notice}>{notice}</Text>}
       <Arena state={state} focusId={myId ?? state.players[0]?.id ?? null} bubbles={feed.bubbles} fraction={fraction} />
-      <Text style={[styles.status, (myTurn || boomed) && { color: C.fuse }]}>{status ? `▸ ${status}` : ' '}</Text>
+      <Text style={[styles.status, (myTurn || boomed) && { color: C.fuse }, retry && { color: C.danger }]}>
+        {status ? `▸ ${status}` : ' '}
+      </Text>
       <ActivityLog feed={feed} />
       {state.used.length > 0 && (
         <Panel title={`ALREADY SAID · ${state.used.length}`}>

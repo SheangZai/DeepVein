@@ -1,4 +1,5 @@
 import { buildPrompt, type BuildIssue } from './build';
+import { everyday } from './prompts/everyday';
 import { food } from './prompts/food';
 import { geography } from './prompts/geography';
 import { nature } from './prompts/nature';
@@ -16,6 +17,7 @@ export const PROMPT_SOURCES: PromptSource[] = [
   ...food,
   ...nature,
   ...words,
+  ...everyday,
 ];
 
 export const BUILD_ISSUES: BuildIssue[] = [];
@@ -45,6 +47,7 @@ export const CATEGORY_LABELS: Record<CategoryId, string> = {
   food: 'Food',
   nature: 'Nature',
   words: 'Culture & History',
+  everyday: 'Everyday',
 };
 
 export function promptsInCategory(category: CategoryId): Prompt[] {

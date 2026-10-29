@@ -32,8 +32,8 @@ export default function PartyHome() {
     <TntScreen>
       <TntTitle />
       <Text style={styles.intro}>
-        Name an answer that fits the category to pass the lit TNT. No repeats, and the fuse gets shorter every
-        pass. Last miner standing wins.
+        Name an answer that fits the category to pass the lit TNT. Wrong? Keep trying until the fuse runs out.
+        No repeats, and the fuse gets shorter every pass. Last miner standing wins.
       </Text>
 
       <Panel title="WHO’S PLAYING" action={{ label: 'HOW TO PLAY', onPress: () => router.push('/how-to') }}>

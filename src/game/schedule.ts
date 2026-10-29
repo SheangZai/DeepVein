@@ -51,6 +51,32 @@ export function promptsForDig(digNo: number): string[] {
   return picked;
 }
 
+/** How many times an endless dig cycles through the pool; nobody gets that far. */
+const ENDLESS_CYCLES = 5;
+
+/** Repeats a pool as back-to-back shuffles, never the same prompt twice in a row. */
+function endlessFrom(first: string[], rand: () => number): string[] {
+  const all = PROMPTS.map((p) => p.id).sort();
+  const out = [...first];
+  let pool = all.filter((id) => !first.includes(id));
+  for (let c = 0; c < ENDLESS_CYCLES; c++) {
+    const next = shuffled(pool, rand);
+    if (next[0] === out[out.length - 1]) next.push(next.shift()!);
+    out.push(...next);
+    pool = all;
+  }
+  return out;
+}
+
+/** The daily dig: today's seeded opening, then the rest of the pool in a seeded order. */
+export function endlessDailyPrompts(digNo: number): string[] {
+  return endlessFrom(promptsForDig(digNo), mulberry32(hashString(`endless:${digNo}`)));
+}
+
+export function endlessRandomPrompts(exclude: string[] = []): string[] {
+  return endlessFrom(randomPrompts(exclude), Math.random);
+}
+
 export function randomPrompts(exclude: string[] = []): string[] {
   const pool = PROMPTS.map((p) => p.id).filter((id) => !exclude.includes(id));
   const source = pool.length >= PROMPTS_PER_DIG ? pool : PROMPTS.map((p) => p.id);

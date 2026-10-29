@@ -8,7 +8,7 @@ import { Icon, type IconName } from '@/components/icons';
 import { Strata } from '@/components/strata';
 import { Button, Card, IconBadge, Label, Muted, Row } from '@/components/ui';
 import { currentDigNo, formatCountdown, msUntilNextDig } from '@/game/schedule';
-import { depthFor, MAX_SCORE, PROMPTS_PER_DIG, SECONDS_PER_PROMPT, zoneFor } from '@/game/tiers';
+import { depthFor, DIG_LIVES, SECONDS_PER_PROMPT, zoneFor } from '@/game/tiers';
 import { buddyFor, liveStreak, progressStore } from '@/lib/progress';
 import { useStore } from '@/lib/storage';
 import { C, F, R, S } from '@/theme';
@@ -84,7 +84,7 @@ export default function Home() {
             <>
               <Text style={styles.dailyScore}>{depthFor(today.score).toLocaleString()} m</Text>
               <Text style={styles.zone}>
-                {zoneFor(depthFor(today.score)).name} · {today.score}/{MAX_SCORE} pts
+                {zoneFor(depthFor(today.score)).name} · {today.score} pts · {today.answers.length} dug
               </Text>
               <GemRow answers={today.answers} size={30} gap={6} />
               <Row style={styles.countdown}>
@@ -97,7 +97,8 @@ export default function Home() {
             <>
               <Text style={styles.dailyTitle}>Today’s vein is open</Text>
               <Row style={styles.meta}>
-                <MetaPill icon="layers" text={`${PROMPTS_PER_DIG} prompts`} />
+                <MetaPill icon="infinity" text="Endless" />
+                <MetaPill icon="heart" text={`${DIG_LIVES} lives`} />
                 <MetaPill icon="clock" text={`${SECONDS_PER_PROMPT}s each`} />
                 <MetaPill icon="gem" text="Rare = deep" />
               </Row>

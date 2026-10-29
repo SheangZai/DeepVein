@@ -26,7 +26,7 @@ export function DailySocial({ result }: { result: DigResult }) {
     let cancelled = false;
     (async () => {
       try {
-        await submitDaily(digNo, result.score, gridOf(result.answers), result.answers);
+        await submitDaily(digNo, result.score, gridOf(result.answers, 40), result.answers);
         const [r, f] = await Promise.all([getRank(digNo, result.score), getFriendResults(digNo)]);
         if (cancelled) return;
         setRank(r);

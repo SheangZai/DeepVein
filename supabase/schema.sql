@@ -13,7 +13,7 @@ create table if not exists public.profiles (
 create table if not exists public.daily_results (
   user_id uuid not null references public.profiles (id) on delete cascade,
   dig_no int not null check (dig_no > 0),
-  score int not null check (score between 0 and 700),
+  score int not null check (score between 0 and 100000),
   grid text not null check (char_length(grid) <= 64),
   answers jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),

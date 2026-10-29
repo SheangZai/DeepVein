@@ -1,8 +1,9 @@
 /**
  * TNT Toss: players take turns naming answers for a shared category. A valid,
- * unused answer passes the lit TNT along and the fuse gets shorter. If the
- * fuse burns out on you, you lose a heart and a new category starts.
- * Last miner standing wins.
+ * unused answer passes the lit TNT along; a wrong one can be retried while the
+ * fuse burns. The fuse starts long and gets shorter with every pass for the
+ * whole game, down to a floor. If it burns out on you, you lose a heart and a
+ * new category starts. Last miner standing wins.
  *
  * Pure state transitions: the host device (or the single device in
  * pass-and-play) owns the state and calls these; everyone else renders it.
@@ -13,9 +14,10 @@ import { PROMPTS, getPrompt } from '@/content';
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 8;
 export const START_HEARTS = 3;
-export const START_FUSE_MS = 12_000;
-export const MIN_FUSE_MS = 4_000;
-export const FUSE_DECAY = 0.9;
+export const START_FUSE_MS = 25_000;
+export const MIN_FUSE_MS = 8_000;
+/** Each pass keeps this share of the fuse: 25s → 8s takes about 14 passes. */
+export const FUSE_DECAY = 0.92;
 export const BOOM_PAUSE_MS = 2_500;
 
 /** Categories need enough answers that a full table can keep passing. */
@@ -96,6 +98,7 @@ function pickPrompt(seen: string[], rand: () => number) {
   return pool[Math.floor(rand() * pool.length)];
 }
 
+/** New category. The fuse keeps the speed it had reached; only a new game resets it. */
 function startRound(s: TntState, firstTurn: string | null, now: number, rand: () => number): TntState {
   const promptId = pickPrompt(s.seenPrompts, rand);
   return bump(s, {
@@ -104,8 +107,7 @@ function startRound(s: TntState, firstTurn: string | null, now: number, rand: ()
     seenPrompts: [...s.seenPrompts, promptId],
     used: [],
     usedIds: [],
-    fuseMs: START_FUSE_MS,
-    fuseEndsAt: now + START_FUSE_MS,
+    fuseEndsAt: now + s.fuseMs,
     turn: firstTurn,
   });
 }

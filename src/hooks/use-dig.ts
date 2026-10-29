@@ -4,12 +4,11 @@ import { Platform } from 'react-native';
 
 import { getPrompt } from '@/content';
 import { matchAnswer } from '@/content/build';
-import { SECONDS_PER_PROMPT, TIERS } from '@/game/tiers';
+import { DIG_LIVES, SECONDS_PER_PROMPT, TIERS } from '@/game/tiers';
 import type { AnswerRecord } from '@/lib/progress';
 
 export type DigPhase = 'ready' | 'playing' | 'feedback' | 'done';
 
-const FEEDBACK_MS = 1400;
 const PROMPT_MS = SECONDS_PER_PROMPT * 1000;
 
 function haptic(record: AnswerRecord) {
@@ -23,7 +22,16 @@ function haptic(record: AnswerRecord) {
   done.catch(() => {});
 }
 
-export function useDig(promptIds: string[], onFinish: (answers: AnswerRecord[]) => void) {
+/**
+ * Runs a dig. `endless` digs keep serving prompts until the player runs out of
+ * lives or quits; otherwise the dig ends after the last prompt. After each
+ * answer the phase stays on 'feedback' until the screen calls `next()`.
+ */
+export function useDig(
+  promptIds: string[],
+  onFinish: (answers: AnswerRecord[]) => void,
+  { endless = false }: { endless?: boolean } = {},
+) {
   const [phase, setPhase] = useState<DigPhase>('ready');
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
@@ -31,6 +39,9 @@ export function useDig(promptIds: string[], onFinish: (answers: AnswerRecord[]) 
   const [now, setNow] = useState(Date.now);
   const resolving = useRef(false);
   const finished = useRef(false);
+
+  const misses = answers.filter((a) => a.tier === 'miss').length;
+  const lives = endless ? Math.max(0, DIG_LIVES - misses) : null;
 
   const start = useCallback(() => {
     resolving.current = false;
@@ -72,21 +83,27 @@ export function useDig(promptIds: string[], onFinish: (answers: AnswerRecord[]) 
     return () => clearInterval(t);
   }, [phase, deadline, resolve]);
 
-  // After showing the result of a prompt, move on.
-  useEffect(() => {
+  /** Leave the result screen for the next prompt, or end the dig. */
+  const next = useCallback(() => {
     if (phase !== 'feedback') return;
-    const t = setTimeout(() => {
-      if (index + 1 >= promptIds.length) {
-        setPhase('done');
-      } else {
-        resolving.current = false;
-        setIndex(index + 1);
-        setDeadline(Date.now() + PROMPT_MS);
-        setPhase('playing');
-      }
-    }, FEEDBACK_MS);
-    return () => clearTimeout(t);
-  }, [phase, index, promptIds.length]);
+    const outOfPrompts = index + 1 >= promptIds.length;
+    if (outOfPrompts || lives === 0) {
+      setPhase('done');
+      return;
+    }
+    resolving.current = false;
+    setIndex(index + 1);
+    setDeadline(Date.now() + PROMPT_MS);
+    setPhase('playing');
+  }, [phase, index, promptIds.length, lives]);
+
+  /** End the dig now. A prompt that is still open is not counted. */
+  const quit = useCallback(() => {
+    if (phase === 'playing' || phase === 'feedback') {
+      resolving.current = true;
+      setPhase('done');
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (phase === 'done' && !finished.current) {
@@ -103,9 +120,14 @@ export function useDig(promptIds: string[], onFinish: (answers: AnswerRecord[]) 
     prompt: promptIds[index] ? getPrompt(promptIds[index]) : null,
     answers,
     lastAnswer: answers[answers.length - 1] ?? null,
+    lives,
+    /** True when the answer on screen used up the last life. */
+    cavedIn: lives === 0,
     remainingMs,
     remainingFraction: remainingMs / PROMPT_MS,
     start,
     submit: resolve,
+    next,
+    quit,
   };
 }

@@ -73,11 +73,14 @@ export const TIERS: Record<TierId, Tier> = {
 export const TIER_ORDER: TierId[] = ['miss', 'dirt', 'fools', 'copper', 'emerald', 'ruby', 'diamond'];
 export const ANSWER_TIERS: AnswerTierId[] = ['dirt', 'fools', 'copper', 'emerald', 'ruby', 'diamond'];
 
+/** Fixed-length digs (shaft levels) and the seeded opening of each daily dig. */
 export const PROMPTS_PER_DIG = 7;
 export const SECONDS_PER_PROMPT = 25;
 export const METERS_PER_POINT = 10;
-export const MAX_SCORE = PROMPTS_PER_DIG * TIERS.diamond.points;
-export const MAX_DEPTH = MAX_SCORE * METERS_PER_POINT;
+/** Endless digs end after this many misses (wrong, passed or timed out). */
+export const DIG_LIVES = 3;
+/** Bottom of the drawn mine shaft; deeper digs pin to the bottom. */
+export const SHAFT_DEPTH = 12_000;
 
 export const DEPTH_ZONES = [
   { from: 0, name: 'Topsoil', color: '#6b4a2b' },
@@ -86,6 +89,7 @@ export const DEPTH_ZONES = [
   { from: 3000, name: 'Crystal Caverns', color: '#2f4a6b' },
   { from: 4500, name: 'Magma Belt', color: '#8a2f1f' },
   { from: 6000, name: 'The Core', color: '#c9622a' },
+  { from: 9000, name: 'The Abyss', color: '#3b2357' },
 ] as const;
 
 export function depthFor(score: number) {

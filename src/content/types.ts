@@ -1,6 +1,6 @@
 import type { AnswerTierId } from '@/game/tiers';
 
-export type CategoryId = 'geography' | 'science' | 'sports' | 'screen' | 'food' | 'nature' | 'words';
+export type CategoryId = 'geography' | 'science' | 'sports' | 'screen' | 'food' | 'nature' | 'words' | 'everyday';
 
 /**
  * Authoring format for one prompt. Each answer is "Canonical|alias|alias".

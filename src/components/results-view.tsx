@@ -4,7 +4,7 @@ import { Share, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { getPrompt } from '@/content';
-import { depthFor, MAX_SCORE, TIERS, zoneFor } from '@/game/tiers';
+import { depthFor, TIERS, zoneFor } from '@/game/tiers';
 import { gridOf, type AnswerRecord } from '@/lib/progress';
 import { C, F, R, S } from '@/theme';
 
@@ -14,7 +14,8 @@ import { Button, Card, Label, Muted, Row, TierChip } from './ui';
 
 export function shareText(label: string, answers: AnswerRecord[], score: number) {
   const depth = depthFor(score);
-  return `${label} ⛏️ ${score}/${MAX_SCORE} · ${depth.toLocaleString()} m\n${gridOf(answers)}`;
+  const n = answers.length;
+  return `${label} ⛏️ ${depth.toLocaleString()} m · ${score} pts · ${n} prompt${n === 1 ? '' : 's'}\n${gridOf(answers, 30)}`;
 }
 
 export function ResultsView({
@@ -49,7 +50,7 @@ export function ResultsView({
         <Row style={styles.zoneRow}>
           <View style={[styles.zoneDot, { backgroundColor: zone.color }]} />
           <Text style={styles.zone}>
-            {zone.name} · {score}/{MAX_SCORE} pts
+            {zone.name} · {score} pts · {answers.length} dug
           </Text>
         </Row>
         <View style={styles.gems}>

@@ -131,6 +131,8 @@ export function scoreOf(answers: AnswerRecord[]) {
   return answers.reduce((n, a) => n + a.points, 0);
 }
 
-export function gridOf(answers: AnswerRecord[]) {
-  return answers.map((a) => TIERS[a.tier].emoji).join('');
+/** Emoji grid of a dig; long digs are cut to `max` gems plus an ellipsis. */
+export function gridOf(answers: AnswerRecord[], max = Infinity) {
+  const grid = answers.slice(0, max).map((a) => TIERS[a.tier].emoji).join('');
+  return answers.length > max ? `${grid}…` : grid;
 }

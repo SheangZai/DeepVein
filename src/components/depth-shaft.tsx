@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
-import { DEPTH_ZONES, MAX_DEPTH } from '@/game/tiers';
+import { DEPTH_ZONES, SHAFT_DEPTH } from '@/game/tiers';
 import { C, F, R } from '@/theme';
 
 /** Vertical cross-section of the mine with the buddy sunk to `depth`. */
@@ -11,7 +11,7 @@ export function DepthShaft({ depth, buddy, height = 300 }: { depth: number; budd
 
   useEffect(() => {
     Animated.timing(progress, {
-      toValue: Math.min(1, depth / MAX_DEPTH),
+      toValue: Math.min(1, depth / SHAFT_DEPTH),
       duration: 1600,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
@@ -27,10 +27,10 @@ export function DepthShaft({ depth, buddy, height = 300 }: { depth: number; budd
   return (
     <View style={[styles.shaft, { height }]}>
       {DEPTH_ZONES.map((zone, i) => {
-        const to = DEPTH_ZONES[i + 1]?.from ?? MAX_DEPTH;
+        const to = DEPTH_ZONES[i + 1]?.from ?? SHAFT_DEPTH;
         const reached = depth >= zone.from;
         return (
-          <View key={zone.name} style={[styles.zone, { flex: (to - zone.from) / MAX_DEPTH }]}>
+          <View key={zone.name} style={[styles.zone, { flex: (to - zone.from) / SHAFT_DEPTH }]}>
             <LinearGradient
               colors={[zone.color, `${zone.color}bb`]}
               style={StyleSheet.absoluteFill}
