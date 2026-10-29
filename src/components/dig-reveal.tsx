@@ -37,7 +37,9 @@ function tierFraction(points: number) {
   return points / TIERS.diamond.points;
 }
 
+/** Also called from animated styles, so it must run on the UI thread. */
 function yFor(fraction: number) {
+  'worklet';
   return TOP_PAD + fraction * (SHAFT_H - TOP_PAD - BOTTOM_PAD);
 }
 
