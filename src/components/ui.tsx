@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   TextInput,
   View,
   type StyleProp,
+  type TextInputInstance,
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
@@ -74,8 +76,11 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-export function Input({ style, ...props }: TextInputProps) {
-  return <TextInput placeholderTextColor={C.faint} style={[styles.input, style]} {...props} />;
+export function Input({ style, ref, ...props }: TextInputProps & { ref?: Ref<TextInputInstance> }) {
+  // react-native-web ignores submitBehavior and blurs on Enter by default;
+  // it still reads the older blurOnSubmit prop, so translate it there.
+  const web = Platform.OS === 'web' && props.submitBehavior ? { blurOnSubmit: props.submitBehavior === 'blurAndSubmit' } : null;
+  return <TextInput ref={ref} placeholderTextColor={C.faint} style={[styles.input, style]} {...web} {...props} />;
 }
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';

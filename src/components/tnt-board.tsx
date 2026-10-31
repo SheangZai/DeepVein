@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View, type TextInputInstance } from 'react-native';
 
 import type { TntState } from '@/game/tnt';
 import { C, F, R, S } from '@/theme';
@@ -19,7 +19,7 @@ import {
 } from './tnt-arena';
 import { Input } from './ui';
 
-function useTicker(active: boolean) {
+export function useTicker(active: boolean) {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     if (!active) return;
@@ -69,6 +69,13 @@ export function TntBoard({
     ? state.players.find((p) => p.id === state.lastEvent?.playerId)
     : null;
 
+  // The box stays editable between turns (locking it drops focus), and
+  // grabs focus again whenever the TNT comes back to this player.
+  const inputRef = useRef<TextInputInstance>(null);
+  useEffect(() => {
+    if (myTurn) inputRef.current?.focus();
+  }, [myTurn, state.turn]);
+
   const send = () => {
     if (!text.trim() || !myTurn) return;
     onSubmit(text);
@@ -98,8 +105,8 @@ export function TntBoard({
             <Input
               value={text}
               onChangeText={setText}
+              ref={inputRef}
               onSubmitEditing={send}
-              editable={myTurn}
               autoFocus={myTurn}
               autoCorrect={false}
               autoCapitalize="words"

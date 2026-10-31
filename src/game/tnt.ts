@@ -20,6 +20,12 @@ export const MIN_FUSE_MS = 8_000;
 /** Each pass keeps this share of the fuse: 25s → 8s takes about 14 passes. */
 export const FUSE_DECAY = 0.92;
 export const BOOM_PAUSE_MS = 2_500;
+/** Public lobbies start on their own once enough miners are in. */
+export const LOBBY_COUNTDOWN_MS = 15_000;
+/** A full lobby has no one left to wait for. */
+export const FULL_COUNTDOWN_MS = 5_000;
+/** Public tables return to the lobby this long after a game ends. */
+export const RESULTS_PAUSE_MS = 8_000;
 
 /** Categories need enough answers that a full table can keep passing. */
 export const TNT_PROMPT_IDS = PROMPTS.filter((p) => p.entries.length >= 20).map((p) => p.id);
@@ -53,7 +59,10 @@ export interface TntState {
   fuseMs: number;
   /** Timestamps are in the clock of whichever device owns the state. */
   fuseEndsAt: number;
+  /** End of the boom pause, or (in 'over') when a public table returns to the lobby. */
   resumeAt: number;
+  /** Public lobby countdown; 0 when not counting down. */
+  startsAt: number;
   seenPrompts: string[];
   lastEvent: TntEvent | null;
   winner: string | null;
@@ -71,6 +80,7 @@ export function newLobby(): TntState {
     fuseMs: START_FUSE_MS,
     fuseEndsAt: 0,
     resumeAt: 0,
+    startsAt: 0,
     seenPrompts: [],
     lastEvent: null,
     winner: null,
@@ -163,10 +173,10 @@ export function submitAnswer(s: TntState, playerId: string, text: string, now: n
   });
 }
 
-function finishIfDecided(s: TntState): TntState | null {
+function finishIfDecided(s: TntState, now: number): TntState | null {
   const left = alive(s);
   if (left.length <= 1 && s.phase !== 'lobby') {
-    return bump(s, { phase: 'over', turn: null, winner: left[0]?.id ?? null });
+    return bump(s, { phase: 'over', turn: null, winner: left[0]?.id ?? null, resumeAt: now + RESULTS_PAUSE_MS });
   }
   return null;
 }
@@ -184,7 +194,7 @@ export function tick(s: TntState, now: number, rand: () => number): TntState {
       resumeAt: now + BOOM_PAUSE_MS,
       lastEvent: { kind: 'boom', playerId: victim },
     });
-    return finishIfDecided(boomed) ?? boomed;
+    return finishIfDecided(boomed, now) ?? boomed;
   }
   if (s.phase === 'boom' && now >= s.resumeAt) {
     const victim = s.lastEvent?.kind === 'boom' ? s.lastEvent.playerId : s.turn;
@@ -204,7 +214,7 @@ export function removePlayer(s: TntState, playerId: string, now: number): TntSta
   if (s.phase === 'over') return s;
   const players = s.players.map((p) => (p.id === playerId ? { ...p, alive: false, hearts: 0 } : p));
   let next = bump(s, { players, lastEvent: { kind: 'left', playerId } });
-  const decided = finishIfDecided(next);
+  const decided = finishIfDecided(next, now);
   if (decided) return decided;
   if (s.turn === playerId) {
     next = bump(next, { turn: nextAliveAfter(next, playerId), fuseEndsAt: now + next.fuseMs });
@@ -216,6 +226,26 @@ export function removePlayer(s: TntState, playerId: string, now: number): TntSta
 export function rebaseClock(s: TntState, now: number): TntState {
   if (s.phase === 'playing') return bump(s, { fuseEndsAt: now + s.fuseMs });
   if (s.phase === 'boom') return bump(s, { resumeAt: now + BOOM_PAUSE_MS });
+  if (s.phase === 'over') return bump(s, { resumeAt: now + RESULTS_PAUSE_MS });
+  if (s.phase === 'lobby' && s.startsAt) return bump(s, { startsAt: now + LOBBY_COUNTDOWN_MS });
+  return s;
+}
+
+/**
+ * Public rooms run themselves: the lobby counts down once enough miners are
+ * in (shorter when full), and a finished game returns to the lobby. The
+ * caller refills the lobby roster after a return. Same object when unchanged.
+ */
+export function autoTick(s: TntState, now: number, rand: () => number): TntState {
+  if (s.phase === 'lobby') {
+    const n = s.players.length;
+    if (n < MIN_PLAYERS) return s.startsAt ? bump(s, { startsAt: 0 }) : s;
+    if (!s.startsAt) return bump(s, { startsAt: now + LOBBY_COUNTDOWN_MS });
+    if (n >= MAX_PLAYERS && s.startsAt - now > FULL_COUNTDOWN_MS) return bump(s, { startsAt: now + FULL_COUNTDOWN_MS });
+    if (now >= s.startsAt) return startGame(s, now, rand);
+    return s;
+  }
+  if (s.phase === 'over' && now >= s.resumeAt) return backToLobby(s);
   return s;
 }
 

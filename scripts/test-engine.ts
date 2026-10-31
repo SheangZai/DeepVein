@@ -70,6 +70,29 @@ async function main() {
   s = tnt.backToLobby(s);
   assert(s.phase === 'lobby' && s.players.every((p) => p.hearts === tnt.START_HEARTS), 'back to lobby');
 
+  // Public rooms: lobby countdown, full-table shortcut, auto start, auto return.
+  let pub = tnt.setLobbyPlayers(tnt.newLobby(), [{ id: 'solo', name: 'Solo' }]);
+  pub = tnt.autoTick(pub, t, rand);
+  assert(pub.startsAt === 0, 'no countdown with one miner');
+  pub = tnt.setLobbyPlayers(pub, [{ id: 'solo', name: 'Solo' }, { id: 'duo', name: 'Duo' }]);
+  pub = tnt.autoTick(pub, t, rand);
+  assert(pub.startsAt === t + tnt.LOBBY_COUNTDOWN_MS, 'countdown starts at two miners');
+  assert(tnt.autoTick(pub, t + 1000, rand) === pub, 'countdown holds steady');
+  const full = tnt.setLobbyPlayers(pub, Array.from({ length: tnt.MAX_PLAYERS }, (_, i) => ({ id: `p${i}`, name: `P${i}` })));
+  assert(tnt.autoTick(full, t, rand).startsAt === t + tnt.FULL_COUNTDOWN_MS, 'full lobby shortens countdown');
+  const shrunk = tnt.setLobbyPlayers(pub, [{ id: 'solo', name: 'Solo' }]);
+  assert(tnt.autoTick(shrunk, t, rand).startsAt === 0, 'countdown cancels when a miner leaves');
+  pub = tnt.autoTick(pub, pub.startsAt, rand);
+  assert(pub.phase === 'playing', 'countdown starts the game');
+  for (let i = 0; i < 50 && pub.phase !== 'over'; i++) {
+    t = Math.max(pub.fuseEndsAt, pub.resumeAt) + 1;
+    pub = tnt.tick(pub, t, rand);
+  }
+  assert(pub.phase === 'over' && pub.resumeAt === t + tnt.RESULTS_PAUSE_MS, 'results pause set');
+  assert(tnt.autoTick(pub, t, rand) === pub, 'results stay up during the pause');
+  pub = tnt.autoTick(pub, pub.resumeAt, rand);
+  assert(pub.phase === 'lobby' && pub.startsAt === 0, 'table returns to the lobby');
+
   assert(tnt.TNT_PROMPT_IDS.length >= 10, `enough TNT categories (${tnt.TNT_PROMPT_IDS.length})`);
 
   const now = Date.UTC(2026, 9, 28, 15, 59, 0); // 23:59 in UTC+8

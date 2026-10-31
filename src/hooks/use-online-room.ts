@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   MAX_PLAYERS,
+  autoTick,
   backToLobby,
   newLobby,
   rebaseClock,
@@ -193,13 +194,23 @@ export function useOnlineRoom(code: string, name: string, isPublic: boolean, bud
     }
     apply(s);
 
-    const timer = setInterval(() => apply(tick(stateRef.current, Date.now(), Math.random)), 150);
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const before = stateRef.current;
+      let next = tick(before, now, Math.random);
+      if (isPublic) {
+        next = autoTick(next, now, Math.random);
+        // Back from results: seat everyone in the room, including watchers.
+        if (next.phase === 'lobby' && before.phase === 'over') next = setLobbyPlayers(next, members);
+      }
+      apply(next);
+    }, 150);
     const heartbeat = setInterval(() => publish(stateRef.current), 2000);
     return () => {
       clearInterval(timer);
       clearInterval(heartbeat);
     };
-  }, [isHost, members, apply, publish]);
+  }, [isHost, isPublic, members, apply, publish]);
 
   // Public rooms advertise themselves while in the lobby.
   const advertRef = useRef<{ ch: RealtimeChannel; ready: boolean } | null>(null);

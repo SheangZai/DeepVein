@@ -1,8 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 
-import { TntBoard } from '@/components/tnt-board';
+import { TntBoard, useTicker } from '@/components/tnt-board';
 import { ActivityLog, Arena, HudBox, HudRow, TntScreen, useTableFeed } from '@/components/tnt-arena';
 import { TntTitle, TntStats, Waiting } from '@/components/tnt-lobby';
 import { Button, Center, Heading, Muted, Row, Screen } from '@/components/ui';
@@ -10,7 +10,7 @@ import { MAX_PLAYERS, MIN_PLAYERS } from '@/game/tnt';
 import { useOnlineRoom } from '@/hooks/use-online-room';
 import { cleanName } from '@/lib/names';
 import { progressStore } from '@/lib/progress';
-import { C, S } from '@/theme';
+import { C, F, S } from '@/theme';
 
 export default function OnlineRoom() {
   const params = useLocalSearchParams<{ code: string; public?: string }>();
@@ -21,6 +21,12 @@ export default function OnlineRoom() {
   const { state, isHost, me } = room;
   const feed = useTableFeed(state);
   const roomLabel = isPublic ? 'PUBLIC' : 'ROOM';
+  // Hosts on older app builds don't run public timers; fall back to host control.
+  const autoRun = isPublic && typeof state.startsAt === 'number';
+  // Public rooms run on timers set in the host's clock.
+  const counting = autoRun && ((state.phase === 'lobby' && state.startsAt > 0) || state.phase === 'over');
+  const now = useTicker(counting) + room.offset;
+  const secondsTo = (at: number) => Math.max(0, Math.ceil((at - now) / 1000));
 
   if (room.status === 'error') {
     return (
@@ -55,7 +61,23 @@ export default function OnlineRoom() {
         footer={
           <View style={styles.footer}>
             <TntStats miners={n} />
-            {isHost ? (
+            {autoRun ? (
+              canStart && state.startsAt > 0 ? (
+                <>
+                  <View style={styles.countdown}>
+                    <Text style={styles.countdownText}>STARTING IN {secondsTo(state.startsAt)}s</Text>
+                    <Text style={styles.countdownHint}>
+                      {n < MAX_PLAYERS ? 'more miners can still join' : 'table full'}
+                    </Text>
+                  </View>
+                  {isHost && <Button label="Start now" icon="tnt" variant="secondary" onPress={room.start} />}
+                </>
+              ) : (
+                <Waiting
+                  text={`waiting for ${Math.max(1, MIN_PLAYERS - n)} more miner${MIN_PLAYERS - n > 1 ? 's' : ''} to join`}
+                />
+              )
+            ) : isHost ? (
               <Button
                 label={canStart ? 'Light the fuse' : `Waiting for ${MIN_PLAYERS - n} more…`}
                 icon="tnt"
@@ -103,7 +125,9 @@ export default function OnlineRoom() {
       <TntScreen
         footer={
           <View style={styles.footer}>
-            {isHost ? (
+            {autoRun ? (
+              <Waiting text={`next game in the lobby in ${secondsTo(state.resumeAt)}s`} />
+            ) : isHost ? (
               <Button label="Back to lobby" icon="refresh" onPress={room.playAgain} />
             ) : (
               <Waiting text="waiting for the host…" />
@@ -145,5 +169,8 @@ export default function OnlineRoom() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   footer: { gap: S.sm, maxWidth: 640, width: '100%', alignSelf: 'center' },
+  countdown: { alignItems: 'center', gap: 2, paddingVertical: S.xs },
+  countdownText: { color: C.fuse, fontFamily: F.display, fontSize: 28, letterSpacing: 2 },
+  countdownHint: { color: C.muted, fontFamily: F.bold, fontSize: 10, letterSpacing: 2 },
 });
 

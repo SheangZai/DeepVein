@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import Stack from 'expo-router/stack';
-import { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, type TextInputInstance } from 'react-native';
 import Animated, { FadeInDown, useAnimatedStyle, withTiming, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -175,8 +175,14 @@ function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[])
   const dig = useDig(plan.promptIds, onFinish, { endless: plan.endless });
   const [text, setText] = useState('');
   const [confirmQuit, setConfirmQuit] = useState(false);
+  const inputRef = useRef<TextInputInstance>(null);
   const score = scoreOf(dig.answers);
   const depth = depthFor(score);
+
+  // Keep the cursor in the answer box from one prompt to the next.
+  useEffect(() => {
+    if (dig.phase === 'playing') inputRef.current?.focus();
+  }, [dig.phase, dig.index]);
 
   // "End dig" needs a second tap within a few seconds.
   useEffect(() => {
@@ -191,6 +197,12 @@ function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[])
   };
 
   const send = () => {
+    // During the reveal, Enter skips straight to the next prompt.
+    if (dig.phase === 'feedback') {
+      setText('');
+      dig.next();
+      return;
+    }
     if (!text.trim()) return;
     dig.submit(text);
     setText('');
@@ -294,30 +306,33 @@ function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[])
               onNext={dig.next}
             />
           ) : (
-            <>
-              <Row style={styles.timerRow}>
-                <Text style={[styles.seconds, urgent && styles.secondsUrgent]}>{seconds}</Text>
-                <View style={styles.flex}>
-                  <FuseBar fraction={dig.remainingFraction} />
-                </View>
-              </Row>
-              <Input
-                value={text}
-                onChangeText={setText}
-                onSubmitEditing={send}
-                autoFocus
-                autoCorrect={false}
-                autoCapitalize="words"
-                returnKeyType="go"
-                placeholder="Type an answer…"
-                style={[styles.input, text.trim() !== '' && styles.inputActive]}
-                submitBehavior="submit"
-              />
-              <Row>
-                <Button label="Dig" icon="pickaxe" onPress={send} disabled={!text.trim()} style={styles.flex} />
-                <Button label="Pass" variant="secondary" onPress={() => dig.submit('')} style={styles.pass} />
-              </Row>
-            </>
+            <Row style={styles.timerRow}>
+              <Text style={[styles.seconds, urgent && styles.secondsUrgent]}>{seconds}</Text>
+              <View style={styles.flex}>
+                <FuseBar fraction={dig.remainingFraction} />
+              </View>
+            </Row>
+          )}
+
+          {/* Stays mounted through the reveal so focus (and the keyboard) never drops. */}
+          <Input
+            ref={inputRef}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={send}
+            autoFocus
+            autoCorrect={false}
+            autoCapitalize="words"
+            returnKeyType={showingFeedback ? 'next' : 'go'}
+            placeholder={showingFeedback ? (final ? 'Press Enter to finish' : 'Press Enter for the next prompt') : 'Type an answer…'}
+            style={[styles.input, text.trim() !== '' && styles.inputActive]}
+            submitBehavior="submit"
+          />
+          {!showingFeedback && (
+            <Row>
+              <Button label="Dig" icon="pickaxe" onPress={send} disabled={!text.trim()} style={styles.flex} />
+              <Button label="Pass" variant="secondary" onPress={() => dig.submit('')} style={styles.pass} />
+            </Row>
           )}
 
           {plan.endless && !(showingFeedback && final) && (
