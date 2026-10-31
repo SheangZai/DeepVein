@@ -15,6 +15,7 @@ import {
   tick,
   type TntState,
 } from '@/game/tnt';
+import { ensureSession } from '@/lib/social';
 import { createStore } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
@@ -23,6 +24,8 @@ interface Member {
   name: string;
   joinedAt: number;
   buddy?: string;
+  /** Account id; present when signed in, required for ranked play. */
+  uid?: string;
 }
 
 export interface PublicRoom {
@@ -139,7 +142,7 @@ export function useOnlineRoom(code: string, name: string, isPublic: boolean, bud
         .filter((m): m is Member & { presence_ref: string } => Boolean(m?.id));
       setMembers(
         list
-          .map(({ id, name: n, joinedAt: j, buddy: b }) => ({ id, name: n, joinedAt: j, buddy: b }))
+          .map(({ id, name: n, joinedAt: j, buddy: b, uid }) => ({ id, name: n, joinedAt: j, buddy: b, uid }))
           .sort((a, b) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id)),
       );
     });
@@ -160,7 +163,9 @@ export function useOnlineRoom(code: string, name: string, isPublic: boolean, bud
     });
     ch.subscribe(async (s) => {
       if (s === 'SUBSCRIBED') {
-        await ch.track({ id: me, name, joinedAt, buddy });
+        // Signing in lets the game count for ranked; play on without it if that fails.
+        const uid = await ensureSession().catch(() => undefined);
+        await ch.track({ id: me, name, joinedAt, buddy, uid });
         setStatus('live');
         ch.send({ type: 'broadcast', event: 'hello', payload: {} });
       } else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') {

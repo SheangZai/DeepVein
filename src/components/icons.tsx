@@ -116,6 +116,12 @@ const ICONS = {
     </>
   ),
   check: <Path d="M20 6 9 17l-5-5" />,
+  flag: (
+    <>
+      <Path d="M4 22V4" />
+      <Path d="M4 4h13l-2 4 2 4H4" />
+    </>
+  ),
   x: (
     <>
       <Path d="M18 6 6 18" />

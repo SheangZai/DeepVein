@@ -37,6 +37,8 @@ export interface TntPlayer {
   alive: boolean;
   /** Streak buddy id shown on the player's ledge. */
   buddy?: string;
+  /** Signed-in account id, needed for ranked play. */
+  uid?: string;
 }
 
 export type TntEvent =
@@ -66,6 +68,10 @@ export interface TntState {
   seenPrompts: string[];
   lastEvent: TntEvent | null;
   winner: string | null;
+  /** Fresh id per game, so ranked results can't be reported twice. */
+  matchId: string;
+  /** Player ids in the order they were knocked out. */
+  out: string[];
   seq: number;
 }
 
@@ -84,6 +90,8 @@ export function newLobby(): TntState {
     seenPrompts: [],
     lastEvent: null,
     winner: null,
+    matchId: '',
+    out: [],
     seq: 0,
   };
 }
@@ -127,7 +135,10 @@ function startRound(s: TntState, firstTurn: string | null, now: number, rand: ()
   });
 }
 
-export function setLobbyPlayers(s: TntState, players: { id: string; name: string; buddy?: string }[]): TntState {
+export function setLobbyPlayers(
+  s: TntState,
+  players: { id: string; name: string; buddy?: string; uid?: string }[],
+): TntState {
   if (s.phase !== 'lobby') return s;
   const next = players.slice(0, MAX_PLAYERS).map((p) => ({
     id: p.id,
@@ -136,11 +147,13 @@ export function setLobbyPlayers(s: TntState, players: { id: string; name: string
     hearts: START_HEARTS,
     alive: true,
     buddy: p.buddy,
+    uid: p.uid,
   }));
   const same =
     next.length === s.players.length &&
     next.every(
-      (p, i) => p.id === s.players[i].id && p.name === s.players[i].name && p.buddy === s.players[i].buddy,
+      (p, i) =>
+        p.id === s.players[i].id && p.name === s.players[i].name && p.buddy === s.players[i].buddy && p.uid === s.players[i].uid,
     );
   return same ? s : bump(s, { players: next });
 }
@@ -149,7 +162,8 @@ export function startGame(s: TntState, now: number, rand: () => number): TntStat
   if (s.players.length < MIN_PLAYERS) return s;
   const players = s.players.map((p) => ({ ...p, hearts: START_HEARTS, alive: true }));
   const first = players[Math.floor(rand() * players.length)].id;
-  const reset = { ...newLobby(), players, seq: s.seq };
+  const matchId = now.toString(36) + Math.floor(rand() * 36 ** 6).toString(36);
+  const reset = { ...newLobby(), players, matchId, seq: s.seq };
   return startRound(reset, first, now, rand);
 }
 
@@ -188,8 +202,10 @@ export function tick(s: TntState, now: number, rand: () => number): TntState {
     const players = s.players.map((p) =>
       p.id === victim ? { ...p, hearts: p.hearts - 1, alive: p.hearts - 1 > 0 } : p,
     );
+    const knockedOut = !players.find((p) => p.id === victim)!.alive;
     const boomed = bump(s, {
       players,
+      out: knockedOut ? [...s.out, victim] : s.out,
       phase: 'boom',
       resumeAt: now + BOOM_PAUSE_MS,
       lastEvent: { kind: 'boom', playerId: victim },
@@ -212,8 +228,13 @@ export function removePlayer(s: TntState, playerId: string, now: number): TntSta
     return bump(s, { players: s.players.filter((p) => p.id !== playerId) });
   }
   if (s.phase === 'over') return s;
+  const wasAlive = s.players.find((p) => p.id === playerId)!.alive;
   const players = s.players.map((p) => (p.id === playerId ? { ...p, alive: false, hearts: 0 } : p));
-  let next = bump(s, { players, lastEvent: { kind: 'left', playerId } });
+  let next = bump(s, {
+    players,
+    out: wasAlive ? [...s.out, playerId] : s.out,
+    lastEvent: { kind: 'left', playerId },
+  });
   const decided = finishIfDecided(next, now);
   if (decided) return decided;
   if (s.turn === playerId) {
@@ -255,4 +276,20 @@ export function backToLobby(s: TntState): TntState {
     players: s.players.map((p) => ({ ...p, hearts: START_HEARTS, alive: true })),
     seq: s.seq + 1,
   };
+}
+
+/**
+ * Final standings as account ids, best first: the winner, then everyone in
+ * reverse knockout order. Null when the game can't be ranked (not over, or a
+ * player isn't signed in).
+ */
+export function rankedPlacements(s: TntState): string[] | null {
+  if (s.phase !== 'over' || !s.matchId || s.players.length < MIN_PLAYERS) return null;
+  const order = [...(s.winner ? [s.winner] : []), ...[...s.out].reverse()];
+  const seen = new Set(order);
+  // Anyone missing from the knockout list (shouldn't happen) goes last.
+  for (const p of s.players) if (!seen.has(p.id)) order.push(p.id);
+  const uids = order.map((id) => s.players.find((p) => p.id === id)?.uid);
+  if (uids.some((u) => !u) || new Set(uids).size !== uids.length) return null;
+  return uids as string[];
 }

@@ -90,6 +90,13 @@ async function main() {
   }
   assert(pub.phase === 'over' && pub.resumeAt === t + tnt.RESULTS_PAUSE_MS, 'results pause set');
   assert(tnt.autoTick(pub, t, rand) === pub, 'results stay up during the pause');
+  assert(tnt.rankedPlacements(pub) === null, 'unranked without signed-in players');
+  const signed = { ...pub, players: pub.players.map((p) => ({ ...p, uid: `u-${p.id}` })) };
+  const places = tnt.rankedPlacements(signed);
+  assert(
+    !!places && places.length === 2 && places[0] === `u-${pub.winner}` && pub.out.length === 1,
+    'placements put the winner first',
+  );
   pub = tnt.autoTick(pub, pub.resumeAt, rand);
   assert(pub.phase === 'lobby' && pub.startsAt === 0, 'table returns to the lobby');
 

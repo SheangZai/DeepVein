@@ -5,6 +5,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { getPrompt } from '@/content';
 import { depthFor, TIERS, zoneFor } from '@/game/tiers';
+import { WEB_URL } from '@/lib/links';
 import { gridOf, type AnswerRecord } from '@/lib/progress';
 import { C, F, R, S } from '@/theme';
 
@@ -12,10 +13,27 @@ import { DepthShaft } from './depth-shaft';
 import { Gem, GemRow } from './gem';
 import { Button, Card, Label, Muted, Row, TierChip } from './ui';
 
-export function shareText(label: string, answers: AnswerRecord[], score: number) {
+/**
+ * The share post doubles as an ad: a headline, rare finds as the hook, the
+ * grid in rows of ten, and a link that plays in the browser.
+ */
+export function shareText(label: string, answers: AnswerRecord[], score: number, streak = 0) {
   const depth = depthFor(score);
-  const n = answers.length;
-  return `${label} ⛏️ ${depth.toLocaleString()} m · ${score} pts · ${n} prompt${n === 1 ? '' : 's'}\n${gridOf(answers, 30)}`;
+  const rows: string[] = [];
+  Array.from(gridOf(answers, 30)).forEach((ch, i) => {
+    if (i % 10 === 0) rows.push('');
+    rows[rows.length - 1] += ch;
+  });
+  const rare = (['diamond', 'ruby'] as const)
+    .map((t) => ({ t, n: answers.filter((a) => a.tier === t).length }))
+    .filter(({ n }) => n > 0)
+    .map(({ t, n }) => `${TIERS[t].emoji}×${n}`);
+  const brag = [rare.length ? `Struck ${rare.join(' ')}` : '', streak > 1 ? `🔥 ${streak}-day streak` : '']
+    .filter(Boolean)
+    .join(' · ');
+  return [`${label} ⛏️ ${depth.toLocaleString()} m · ${zoneFor(depth).name}`, ...rows, brag, `Can you dig deeper? ${WEB_URL}`]
+    .filter(Boolean)
+    .join('\n');
 }
 
 export function ResultsView({
@@ -23,18 +41,21 @@ export function ResultsView({
   answers,
   score,
   buddy,
+  streak,
   children,
 }: {
   label: string;
   answers: AnswerRecord[];
   score: number;
   buddy: string;
+  /** Daily streak to brag about in the share post. */
+  streak?: number;
   children?: ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
   const depth = depthFor(score);
   const zone = zoneFor(depth);
-  const text = shareText(label, answers, score);
+  const text = shareText(label, answers, score, streak);
 
   const copy = async () => {
     await Clipboard.setStringAsync(text);

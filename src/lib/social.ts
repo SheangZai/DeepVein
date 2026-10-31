@@ -107,3 +107,38 @@ export async function getFriendResults(digNo: number): Promise<FriendResult[]> {
     })
     .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 }
+
+export interface RankedEntry {
+  id: string;
+  name: string;
+  rating: number;
+  games: number;
+}
+
+/** Reports a finished ranked match. `delta` stays null until enough players agree. */
+export async function reportRanked(matchId: string, placements: string[]) {
+  await ensureSession();
+  const { data, error } = await client().rpc('report_ranked', { p_match: matchId, p_placements: placements });
+  if (error) throw error;
+  const row = (data as { rating: number; delta: number | null }[] | null)?.[0];
+  return { rating: row?.rating ?? null, delta: row?.delta ?? null };
+}
+
+/** Your rating plus the top of the ladder. Throws if ranked play isn't set up on the backend. */
+export async function getRanked(limit = 10) {
+  const id = await ensureSession();
+  const sb = client();
+  const [mine, top] = await Promise.all([
+    sb.from('profiles').select('rating, ranked_games').eq('id', id).single(),
+    sb.rpc('ranked_top', { p_limit: limit }),
+  ]);
+  if (mine.error) throw mine.error;
+  if (top.error) throw top.error;
+  const me = mine.data as { rating: number; ranked_games: number };
+  return {
+    me: { id, rating: me.rating, games: me.ranked_games },
+    top: ((top.data ?? []) as { id: string; display_name: string; rating: number; ranked_games: number }[]).map(
+      (r): RankedEntry => ({ id: r.id, name: cleanName(r.display_name), rating: r.rating, games: r.ranked_games }),
+    ),
+  };
+}

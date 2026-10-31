@@ -1,8 +1,9 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons';
+import { usePlayerSheet } from '@/components/player-sheet';
 import { Panel, TntScreen } from '@/components/tnt-arena';
 import { TntTitle } from '@/components/tnt-lobby';
 import { Input, Row } from '@/components/ui';
@@ -11,6 +12,8 @@ import { BUDDIES } from '@/game/tiers';
 import { bestOpenRoom, newRoomCode, usePublicRooms } from '@/hooks/use-online-room';
 import { cleanName } from '@/lib/names';
 import { progressStore, setBuddy, setPlayerName } from '@/lib/progress';
+import { shownName, syncBlocks, useBlocked } from '@/lib/moderation';
+import { getRanked, type RankedEntry } from '@/lib/social';
 import { useStore } from '@/lib/storage';
 import { backendConfigured } from '@/lib/supabase';
 import { C, F, R, S } from '@/theme';
@@ -21,6 +24,7 @@ export default function PartyHome() {
   const [name, setName] = useState(progress.playerName);
   const [code, setCode] = useState('');
   const ready = name.trim().length > 0;
+  const ladder = useLadder();
 
   const go = (roomCode: string, isPublic: boolean) => {
     setPlayerName(name.trim());
@@ -70,15 +74,15 @@ export default function PartyHome() {
         </View>
       </Panel>
 
-      <Panel title="PLAY NOW">
+      <Panel title="PLAY NOW" action={ladder ? { label: `RATING ${ladder.me.rating}` } : undefined}>
         {backendConfigured && (
           <>
             <Row style={styles.bigRow}>
-              <BigButton icon="globe" label="QUICK PLAY" hint="join an open room" onPress={quickPlay} disabled={!ready} hot />
+              <BigButton icon="globe" label="QUICK PLAY" hint="ranked · open room" onPress={quickPlay} disabled={!ready} hot />
               <BigButton
                 icon="lock"
                 label="PRIVATE"
-                hint="invite with a code"
+                hint="casual · invite code"
                 onPress={() => go(newRoomCode(), false)}
                 disabled={!ready}
               />
@@ -140,7 +144,64 @@ export default function PartyHome() {
       ) : (
         <Text style={styles.hint}>Online rooms need the backend configured. Pass & Play works offline.</Text>
       )}
+
+      {ladder && (
+        <Panel title="TOP MINERS · RANKED">
+          <Ladder top={ladder.top} meId={ladder.me.id} />
+        </Panel>
+      )}
     </TntScreen>
+  );
+}
+
+/** Your rating and the top of the ladder; null when ranked play isn't available. */
+function useLadder() {
+  const [ladder, setLadder] = useState<Awaited<ReturnType<typeof getRanked>> | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!backendConfigured) return;
+      let live = true;
+      syncBlocks();
+      getRanked(10)
+        .then((r) => live && setLadder(r))
+        .catch(() => live && setLadder(null));
+      return () => {
+        live = false;
+      };
+    }, []),
+  );
+  return ladder;
+}
+
+function Ladder({ top, meId }: { top: RankedEntry[]; meId: string }) {
+  const blocked = useBlocked();
+  const playerSheet = usePlayerSheet('ladder');
+  if (top.length === 0) {
+    return <Text style={styles.hint}>No ranked games yet. Win a Quick Play game to top the ladder.</Text>;
+  }
+  return (
+    <>
+      {top.map((r, i) => {
+        const mine = r.id === meId;
+        return (
+          <Pressable
+            key={r.id}
+            disabled={mine}
+            onPress={() => playerSheet.open({ uid: r.id, name: r.name })}
+            accessibilityHint={mine ? undefined : 'Report or block this miner'}
+            style={({ pressed }) => [styles.room, pressed && styles.pressed]}>
+            <Text style={[styles.rank, i < 3 && { color: C.accent }]}>#{i + 1}</Text>
+            <Text numberOfLines={1} style={[styles.flex, styles.roomHost, mine && { color: C.accent }]}>
+              {shownName(blocked, r.id, r.name)}
+              {mine ? ' (you)' : ''}
+            </Text>
+            <Text style={styles.ladderRating}>{r.rating}</Text>
+          </Pressable>
+        );
+      })}
+      <Text style={styles.ladderHint}>Tap a miner to report or block them.</Text>
+      {playerSheet.sheet}
+    </>
   );
 }
 
@@ -239,5 +300,8 @@ const styles = StyleSheet.create({
   roomCode: { color: C.accent, fontFamily: F.display, fontSize: 24, letterSpacing: 3, width: 84 },
   roomHost: { color: C.text, fontFamily: F.semi, fontSize: 14 },
   roomMeta: { color: C.muted, fontFamily: F.bold, fontSize: 10, letterSpacing: 1.5, marginTop: 2 },
+  ladderHint: { color: C.faint, fontFamily: F.regular, fontSize: 11, textAlign: 'center', marginTop: S.xs },
+  rank: { color: C.muted, fontFamily: F.display, fontSize: 18, width: 44 },
+  ladderRating: { color: C.text, fontFamily: F.display, fontSize: 18, letterSpacing: 1 },
   roomJoin: { color: C.danger, fontFamily: F.heavy, fontSize: 12, letterSpacing: 2 },
 });

@@ -1,13 +1,18 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo } from 'react';
 import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 
+import { usePlayerSheet } from '@/components/player-sheet';
 import { TntBoard, useTicker } from '@/components/tnt-board';
 import { ActivityLog, Arena, HudBox, HudRow, TntScreen, useTableFeed } from '@/components/tnt-arena';
 import { TntTitle, TntStats, Waiting } from '@/components/tnt-lobby';
 import { Button, Center, Heading, Muted, Row, Screen } from '@/components/ui';
 import { MAX_PLAYERS, MIN_PLAYERS } from '@/game/tnt';
 import { useOnlineRoom } from '@/hooks/use-online-room';
+import { useRankedResult, type RankedResult } from '@/hooks/use-ranked-result';
+import { roomUrl } from '@/lib/links';
+import { maskBlocked, useBlocked } from '@/lib/moderation';
 import { cleanName } from '@/lib/names';
 import { progressStore } from '@/lib/progress';
 import { C, F, S } from '@/theme';
@@ -18,9 +23,16 @@ export default function OnlineRoom() {
   const isPublic = params.public === '1';
   const { playerName, buddy } = progressStore.get();
   const room = useOnlineRoom(code, cleanName(playerName), isPublic, buddy);
-  const { state, isHost, me } = room;
+  const { isHost, me } = room;
+  // Everything on screen uses this view, so blocked players' names stay hidden.
+  const blocked = useBlocked();
+  const state = useMemo(() => maskBlocked(room.state, blocked), [room.state, blocked]);
   const feed = useTableFeed(state);
-  const roomLabel = isPublic ? 'PUBLIC' : 'ROOM';
+  const playerSheet = usePlayerSheet('tnt-room');
+  const openPlayer = (p: { uid?: string; name: string }) => p.uid && playerSheet.open({ uid: p.uid, name: p.name });
+  // Public rooms are ranked; private rooms are casual.
+  const roomLabel = isPublic ? 'RANKED' : 'ROOM';
+  const ranked = useRankedResult(room.state, isPublic, me);
   // Hosts on older app builds don't run public timers; fall back to host control.
   const autoRun = isPublic && typeof state.startsAt === 'number';
   // Public rooms run on timers set in the host's clock.
@@ -95,7 +107,9 @@ export default function OnlineRoom() {
           right={<HudBox label="READY" value={`${n}/${MAX_PLAYERS}`} color={C.danger} />}
         />
         <TntTitle />
-        <Arena state={state} focusId={me} openSeats={openSeats} />
+        <Arena state={state} focusId={me} openSeats={openSeats} onPressPlayer={openPlayer} />
+        <Muted style={styles.tapHint}>Tap a miner to report or block them.</Muted>
+        {playerSheet.sheet}
         {!isPublic && (
           <Row>
             <Button
@@ -109,7 +123,7 @@ export default function OnlineRoom() {
               label="Invite"
               icon="share"
               variant="secondary"
-              onPress={() => Share.share({ message: `Join my TNT Toss room in Deepvein: ${code}` })}
+              onPress={() => Share.share({ message: `Join my TNT Toss room in Deepvein 🧨 Code ${code}\n${roomUrl(code)}` })}
               style={styles.flex}
             />
           </Row>
@@ -144,7 +158,9 @@ export default function OnlineRoom() {
           title={winner ? `${winner.name} wins!` : 'Everyone blew up!'}
           tagline={state.winner === me ? 'last miner standing' : 'better luck next round'}
         />
-        <Arena state={state} focusId={me} bubbles={feed.bubbles} />
+        {ranked.status !== 'unranked' && <RatingLine result={ranked} />}
+        <Arena state={state} focusId={me} bubbles={feed.bubbles} onPressPlayer={openPlayer} />
+        {playerSheet.sheet}
         <ActivityLog feed={feed} />
       </TntScreen>
     );
@@ -166,7 +182,35 @@ export default function OnlineRoom() {
   );
 }
 
+function RatingLine({ result }: { result: RankedResult }) {
+  const { status, rating, delta } = result;
+  const up = (delta ?? 0) >= 0;
+  return (
+    <View style={styles.rating}>
+      <Text style={styles.ratingLabel}>RATING</Text>
+      {status === 'done' ? (
+        <Text style={styles.ratingValue}>
+          {rating}{' '}
+          <Text style={{ color: up ? C.good : C.danger }}>
+            {up ? '▲' : '▼'}
+            {Math.abs(delta ?? 0)}
+          </Text>
+        </Text>
+      ) : (
+        <Text style={styles.ratingWait}>
+          {status === 'waiting' ? 'confirming result…' : 'couldn’t confirm this game'}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  rating: { alignItems: 'center', gap: 2 },
+  tapHint: { textAlign: 'center', fontSize: 12 },
+  ratingLabel: { color: C.muted, fontFamily: F.bold, fontSize: 10, letterSpacing: 2.5 },
+  ratingValue: { color: C.accent, fontFamily: F.display, fontSize: 30, letterSpacing: 1 },
+  ratingWait: { color: C.muted, fontFamily: F.regular, fontSize: 13 },
   flex: { flex: 1 },
   footer: { gap: S.sm, maxWidth: 640, width: '100%', alignSelf: 'center' },
   countdown: { alignItems: 'center', gap: 2, paddingVertical: S.xs },

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { getPrompt } from '@/content';
+import { useBlocked } from '@/lib/moderation';
 import type { DigResult } from '@/lib/progress';
 import { getFriendResults, getRank, submitDaily, type FriendResult } from '@/lib/social';
 import { backendConfigured } from '@/lib/supabase';
@@ -11,6 +12,7 @@ import { C, F, S } from '@/theme';
 
 import { Gem } from './gem';
 import { Icon } from './icons';
+import { usePlayerSheet } from './player-sheet';
 import { Body, Button, Card, Heading, Label, Muted, Row } from './ui';
 
 /** Uploads today's result, then shows the global rank and friends' digs. */
@@ -20,6 +22,8 @@ export function DailySocial({ result }: { result: DigResult }) {
   const [friends, setFriends] = useState<FriendResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const blocked = useBlocked();
+  const playerSheet = usePlayerSheet('friends');
 
   useEffect(() => {
     if (!backendConfigured) return;
@@ -56,6 +60,8 @@ export function DailySocial({ result }: { result: DigResult }) {
     );
   }
 
+  // Blocking ends the friendship on the server; hide them here right away too.
+  const shown = friends.filter((f) => !(f.userId in blocked));
   const pct = rank.total > 1 ? Math.round(((rank.total - 1 - rank.deeper) / (rank.total - 1)) * 100) : 100;
 
   return (
@@ -73,31 +79,39 @@ export function DailySocial({ result }: { result: DigResult }) {
       </Card>
       <Card>
         <Label>Friends</Label>
-        {friends.length === 0 && (
+        {shown.length === 0 && (
           <>
             <Muted>Add friends with their miner code to compare digs.</Muted>
             <Button label="Add friends" variant="secondary" onPress={() => router.push('/profile')} />
           </>
         )}
-        {friends.map((f) => (
+        {shown.map((f) => (
           <Pressable key={f.userId} onPress={() => setOpen(open === f.userId ? null : f.userId)}>
             <Row style={styles.friendRow}>
               <Body style={styles.flex}>{f.name}</Body>
               <Text style={styles.grid}>{f.grid ?? '—'}</Text>
               <Body style={styles.score}>{f.score ?? '…'}</Body>
+              <Pressable
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={`Report or block ${f.name}`}
+                onPress={() => playerSheet.open({ uid: f.userId, name: f.name })}>
+                <Icon name="flag" size={16} color={C.faint} />
+              </Pressable>
             </Row>
             {open === f.userId &&
               f.answers.map((a) => (
                 <Row key={a.promptId} style={styles.friendAnswer}>
                   <Gem tier={a.tier} size={14} />
                   <Muted style={styles.flex}>
-                    {getPrompt(a.promptId).text}: {a.matched ?? (a.input || '—')}
+                    {getPrompt(a.promptId).text}: {a.matched ?? (a.input ? 'Miss' : '—')}
                   </Muted>
                 </Row>
               ))}
           </Pressable>
         ))}
       </Card>
+      {playerSheet.sheet}
     </>
   );
 }

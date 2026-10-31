@@ -32,12 +32,12 @@ export const food: PromptSource[] = [
     category: 'food',
     text: 'Name a Southeast Asian dish',
     dirt: [
-      'Nasi Lemak', 'Pad Thai|Phad Thai', 'Pho|Phở', 'Satay|Sate|Sate Ayam', 'Nasi Goreng',
+      'Nasi Lemak', 'Pad Thai|Phad Thai', 'Pho|Phở', 'Satay|Sate|Sate Ayam|Chicken satay', 'Nasi Goreng',
       'Laksa', 'Tom Yum|Tom Yam|Tomyam',
     ],
     copper: [
       'Rendang|Beef rendang', 'Hainanese Chicken Rice|Chicken rice|Nasi ayam',
-      'Char Kway Teow|Char Kuey Teow|CKT', 'Roti Canai|Roti Prata', 'Banh Mi|Bánh mì',
+      'Char Kway Teow|Char Kuey Teow|CKT', 'Roti Canai|Roti Prata|Roti|Prata', 'Banh Mi|Bánh mì',
       'Green curry|Thai green curry|Kaeng khiao wan', 'Massaman curry|Massaman', 'Som Tam|Papaya salad|Green papaya salad',
       'Mango sticky rice|Khao niao mamuang', 'Goi Cuon|Gỏi cuốn|Summer rolls|Fresh spring rolls|Vietnamese spring rolls',
       'Chilli crab|Chili crab', 'Bak Kut Teh|BKT', 'Adobo|Chicken adobo|Pork adobo', 'Sinigang', 'Lechon',

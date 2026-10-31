@@ -61,7 +61,8 @@ export function Panel({
   style,
 }: {
   title?: string;
-  action?: { label: string; onPress: () => void };
+  /** Small label at the right of the title; tappable when it has onPress. */
+  action?: { label: string; onPress?: () => void };
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -71,11 +72,13 @@ export function Panel({
         <View style={styles.panelHead}>
           <Text style={styles.panelTitle}>{title}</Text>
           <View style={styles.rule} />
-          {action && (
+          {action?.onPress ? (
             <Pressable onPress={action.onPress} hitSlop={8}>
               <Text style={styles.panelAction}>{action.label}</Text>
             </Pressable>
-          )}
+          ) : action ? (
+            <Text style={styles.panelAction}>{action.label}</Text>
+          ) : null}
         </View>
       )}
       {children}
@@ -269,6 +272,7 @@ export function Arena({
   bubbles = {},
   fraction = 1,
   openSeats = 0,
+  onPressPlayer,
 }: {
   state: TntState;
   /** This player's seat is drawn at the bottom. */
@@ -278,6 +282,8 @@ export function Arena({
   fraction?: number;
   /** Empty ledges to draw (lobby). */
   openSeats?: number;
+  /** Tap another signed-in player (report / block). */
+  onPressPlayer?: (p: TntPlayer) => void;
 }) {
   const [width, setWidth] = useState(0);
   const players = state.players;
@@ -315,6 +321,11 @@ export function Arena({
             return (
               <View key={p?.id ?? `open${i}`} style={[styles.seat, { width: seatW, left: pos.x - seatW / 2, top: pos.y - seatW * 0.42 }]}>
                 {p ? (
+                  <Pressable
+                    disabled={!onPressPlayer || !p.uid || p.id === focusId}
+                    onPress={() => onPressPlayer?.(p)}
+                    accessibilityRole={onPressPlayer && p.uid && p.id !== focusId ? 'button' : undefined}
+                    accessibilityHint="Report or block this miner">
                   <Seat
                     player={p}
                     width={seatW}
@@ -325,6 +336,7 @@ export function Arena({
                     bubble={bubbles[p.id]}
                     showHearts={state.phase !== 'lobby'}
                   />
+                  </Pressable>
                 ) : (
                   <View style={styles.openSeat}>
                     <View style={{ height: seatW * 0.34 }} />

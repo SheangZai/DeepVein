@@ -29,6 +29,7 @@ import {
   type DigMode,
   type DigResult,
 } from '@/lib/progress';
+import { maybeAskForReview } from '@/lib/review';
 import { useStore } from '@/lib/storage';
 import { C, F, R, S } from '@/theme';
 
@@ -125,6 +126,7 @@ export default function DigScreen() {
       };
       recordResult(r);
       setResult(r);
+      maybeAskForReview(r, progressStore.get().digsPlayed);
     },
     [plan],
   );
@@ -148,7 +150,12 @@ export default function DigScreen() {
     return (
       <Screen>
         {header}
-        <ResultsView label={plan.label} answers={result.answers} score={result.score} buddy={buddy}>
+        <ResultsView
+          label={plan.label}
+          answers={result.answers}
+          score={result.score}
+          buddy={buddy}
+          streak={result.mode === 'daily' ? progress.streak : 0}>
           {result.mode === 'daily' && <DailySocial result={result} />}
         </ResultsView>
         {plan.mode === 'unlimited' && (
@@ -170,6 +177,9 @@ export default function DigScreen() {
     </>
   );
 }
+
+/** What to press to skip the reveal: Enter on a keyboard, return on a phone. */
+const SKIP_KEY = Platform.OS === 'web' ? 'Press Enter' : 'Tap return';
 
 function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[]) => void }) {
   const dig = useDig(plan.promptIds, onFinish, { endless: plan.endless });
@@ -324,7 +334,7 @@ function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[])
             autoCorrect={false}
             autoCapitalize="words"
             returnKeyType={showingFeedback ? 'next' : 'go'}
-            placeholder={showingFeedback ? (final ? 'Press Enter to finish' : 'Press Enter for the next prompt') : 'Type an answer…'}
+            placeholder={showingFeedback ? `${SKIP_KEY} ${final ? 'to finish' : 'for the next prompt'}` : 'Type an answer…'}
             style={[styles.input, text.trim() !== '' && styles.inputActive]}
             submitBehavior="submit"
           />

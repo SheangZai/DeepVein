@@ -50,7 +50,7 @@ export default function RootLayout() {
           headerShadowVisible: false,
           contentStyle: { backgroundColor: C.bg },
         }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
         <Stack.Screen name="dig" options={{ title: 'Dig', gestureEnabled: false }} />
         <Stack.Screen name="archive" options={{ title: 'Archive' }} />
         <Stack.Screen name="shafts" options={{ title: 'Shafts' }} />

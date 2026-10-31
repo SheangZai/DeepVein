@@ -8,6 +8,7 @@ import { Gem } from '@/components/gem';
 import { Icon } from '@/components/icons';
 import { Body, Button, Card, Heading, Input, Label, Muted, Row, Screen } from '@/components/ui';
 import { BUDDIES, depthFor } from '@/game/tiers';
+import { BLOCKED_NAME, syncBlocks, unblockPlayer, useBlocked } from '@/lib/moderation';
 import { cleanName, isOffensive } from '@/lib/names';
 import { liveStreak, progressStore, setBuddy, setPlayerName } from '@/lib/progress';
 import { addFriend, deleteAccount, getProfile, updateDisplayName, type Profile } from '@/lib/social';
@@ -103,6 +104,7 @@ function OnlineAccount() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    syncBlocks();
     getProfile()
       .then((p) => {
         setProfile(p);
@@ -212,12 +214,36 @@ function OnlineAccount() {
         />
         <Button label="Add friend" icon="plus" onPress={add} loading={busy} disabled={code.length !== 6} />
       </Card>
+      <BlockedList />
       <Button label="Delete my online data" variant="danger" onPress={confirmDelete} />
     </>
   );
 }
 
+function BlockedList() {
+  const blocked = useBlocked();
+  const ids = Object.keys(blocked);
+  return (
+    <Card>
+      <Heading>Blocked miners</Heading>
+      {ids.length === 0 ? (
+        <Muted>Nobody blocked. Tap a miner in a TNT room, the ranked ladder or your friends list to report or block them.</Muted>
+      ) : (
+        ids.map((id) => (
+          <Row key={id} style={styles.blockedRow}>
+            <Body style={styles.flex}>
+              {blocked[id] === BLOCKED_NAME ? 'Blocked miner' : blocked[id]}
+            </Body>
+            <Button label="Unblock" variant="secondary" onPress={() => unblockPlayer(id).catch(() => {})} />
+          </Row>
+        ))
+      )}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  blockedRow: { alignItems: 'center' },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
   stat: {
     flexBasis: '31%',
