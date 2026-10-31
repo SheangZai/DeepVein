@@ -1,6 +1,7 @@
 import { currentDigNo } from '@/game/schedule';
 import { BUDDIES, TIERS, type BuddyId, type TierId } from '@/game/tiers';
 
+import { cleanName } from './names';
 import { createStore } from './storage';
 
 export type DigMode = 'daily' | 'archive' | 'unlimited' | 'shaft';
@@ -116,7 +117,7 @@ export function setBuddy(buddy: BuddyId) {
 }
 
 export function setPlayerName(playerName: string) {
-  progressStore.set((p) => ({ ...p, playerName: playerName.trim().slice(0, 20) }));
+  progressStore.set((p) => ({ ...p, playerName: cleanName(playerName, '') }));
 }
 
 export function unlockedBuddies(p: Progress) {

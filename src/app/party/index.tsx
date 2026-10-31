@@ -9,6 +9,7 @@ import { Input, Row } from '@/components/ui';
 import { MAX_PLAYERS } from '@/game/tnt';
 import { BUDDIES } from '@/game/tiers';
 import { bestOpenRoom, newRoomCode, usePublicRooms } from '@/hooks/use-online-room';
+import { cleanName } from '@/lib/names';
 import { progressStore, setBuddy, setPlayerName } from '@/lib/progress';
 import { useStore } from '@/lib/storage';
 import { backendConfigured } from '@/lib/supabase';
@@ -124,7 +125,7 @@ export default function PartyHome() {
                   <Text style={styles.roomCode}>{r.code}</Text>
                   <View style={styles.flex}>
                     <Text numberOfLines={1} style={styles.roomHost}>
-                      {r.host ?? 'Miner'}
+                      {cleanName(r.host)}
                     </Text>
                     <Text style={[styles.roomMeta, !open && { color: C.fuse }]}>
                       {r.count}/{MAX_PLAYERS} · {r.phase === 'lobby' ? (open ? 'IN THE LOBBY' : 'FULL') : 'PLAYING'}

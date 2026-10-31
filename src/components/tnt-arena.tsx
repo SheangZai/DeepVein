@@ -151,8 +151,8 @@ function advance(feed: TableFeed, prev: TntState, next: TntState): TableFeed {
       bubbles[e.playerId] = { text: e.answer, ok: true };
       add(`${who} passed with ${e.answer}`, 'good');
     } else if (e.kind === 'reject') {
-      bubbles[e.playerId] = { text: e.text, ok: false };
-      add(e.reason === 'used' ? `${e.text} was already said` : `${who}: “${e.text}” doesn’t fit`, 'bad');
+      bubbles[e.playerId] = { text: e.reason === 'used' ? e.text : '✗', ok: false };
+      add(e.reason === 'used' ? `${e.text} was already said` : `${who}’s answer doesn’t fit`, 'bad');
     } else if (e.kind === 'boom') {
       const out = next.players.find((p) => p.id === e.playerId)?.alive === false;
       add(out ? `BOOM! ${who} is out` : `BOOM! ${who} loses a heart`, 'bad');

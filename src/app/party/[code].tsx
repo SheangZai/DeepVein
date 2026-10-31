@@ -8,6 +8,7 @@ import { TntTitle, TntStats, Waiting } from '@/components/tnt-lobby';
 import { Button, Center, Heading, Muted, Row, Screen } from '@/components/ui';
 import { MAX_PLAYERS, MIN_PLAYERS } from '@/game/tnt';
 import { useOnlineRoom } from '@/hooks/use-online-room';
+import { cleanName } from '@/lib/names';
 import { progressStore } from '@/lib/progress';
 import { C, S } from '@/theme';
 
@@ -16,7 +17,7 @@ export default function OnlineRoom() {
   const code = (params.code ?? '').toUpperCase();
   const isPublic = params.public === '1';
   const { playerName, buddy } = progressStore.get();
-  const room = useOnlineRoom(code, playerName || 'Miner', isPublic, buddy);
+  const room = useOnlineRoom(code, cleanName(playerName), isPublic, buddy);
   const { state, isHost, me } = room;
   const feed = useTableFeed(state);
   const roomLabel = isPublic ? 'PUBLIC' : 'ROOM';

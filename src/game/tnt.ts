@@ -10,6 +10,7 @@
  */
 import { matchAnswer } from '@/content/build';
 import { PROMPTS, getPrompt } from '@/content';
+import { cleanName } from '@/lib/names';
 
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 8;
@@ -34,6 +35,10 @@ export interface TntPlayer {
 
 export type TntEvent =
   | { kind: 'pass'; playerId: string; answer: string }
+  /**
+   * `text` is the matched answer for a repeat, and empty for an answer that
+   * doesn't fit: free text typed by one player is never shown to others.
+   */
   | { kind: 'reject'; playerId: string; text: string; reason: 'unknown' | 'used' }
   | { kind: 'boom'; playerId: string }
   | { kind: 'left'; playerId: string };
@@ -116,7 +121,8 @@ export function setLobbyPlayers(s: TntState, players: { id: string; name: string
   if (s.phase !== 'lobby') return s;
   const next = players.slice(0, MAX_PLAYERS).map((p) => ({
     id: p.id,
-    name: p.name,
+    // Names come from other devices; the state owner cleans them for everyone.
+    name: cleanName(p.name),
     hearts: START_HEARTS,
     alive: true,
     buddy: p.buddy,
@@ -141,7 +147,7 @@ export function submitAnswer(s: TntState, playerId: string, text: string, now: n
   if (s.phase !== 'playing' || s.turn !== playerId || !s.promptId) return s;
   const entry = matchAnswer(getPrompt(s.promptId), text);
   if (!entry) {
-    return bump(s, { lastEvent: { kind: 'reject', playerId, text, reason: 'unknown' } });
+    return bump(s, { lastEvent: { kind: 'reject', playerId, text: '', reason: 'unknown' } });
   }
   if (s.usedIds.includes(entry.id)) {
     return bump(s, { lastEvent: { kind: 'reject', playerId, text: entry.name, reason: 'used' } });

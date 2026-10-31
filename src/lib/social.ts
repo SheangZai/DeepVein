@@ -1,3 +1,4 @@
+import { cleanName } from './names';
 import type { AnswerRecord } from './progress';
 import { supabase } from './supabase';
 
@@ -43,7 +44,7 @@ export async function getProfile(): Promise<Profile> {
 
 export async function updateDisplayName(name: string) {
   const id = await ensureSession();
-  const { error } = await client().from('profiles').update({ display_name: name }).eq('id', id);
+  const { error } = await client().from('profiles').update({ display_name: cleanName(name) }).eq('id', id);
   if (error) throw error;
 }
 
@@ -98,7 +99,7 @@ export async function getFriendResults(digNo: number): Promise<FriendResult[]> {
       const r = byUser.get(p.id);
       return {
         userId: p.id,
-        name: p.display_name,
+        name: cleanName(p.display_name),
         score: r?.score ?? null,
         grid: r?.grid ?? null,
         answers: (r?.answers as AnswerRecord[]) ?? [],

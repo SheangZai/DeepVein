@@ -82,7 +82,7 @@ export function TntBoard({
   const status = boomed
     ? `BOOM! ${boomed.name} got caught`
     : retry
-      ? `${mine ? '' : `${holder?.name ?? '…'}: `}${retry.reason === 'used' ? `${retry.text} was already said` : `“${retry.text}” doesn’t fit`}. ${mine ? 'Try again!' : 'Still holding it…'}`
+      ? `${mine ? '' : `${holder?.name ?? '…'}: `}${retry.reason === 'used' ? `${retry.text} was already said` : 'That doesn’t fit'}. ${mine ? 'Try again!' : 'Still holding it…'}`
       : playing
         ? mine
           ? 'You’re holding the TNT!'

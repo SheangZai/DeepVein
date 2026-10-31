@@ -1,0 +1,53 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0.0",
+    "copyright": "2026 Timothy Dev Studio",
+    "categories": [
+      [
+        "GAMES",
+        "GAMES_TRIVIA",
+        "GAMES_WORD"
+      ],
+      "ENTERTAINMENT"
+    ],
+    "info": {
+      "en-US": {
+        "title": "Deepvein",
+        "subtitle": "Rare answers dig deeper",
+        "promoText": "Name a colour. Name a dinosaur. Name a makeup tool. Easy to answer, hard to answer rare. How deep can you dig?",
+        "description": "Deepvein is a trivia game where every correct answer counts, but the rarer your answer, the deeper you dig.\n\nName a fruit. Name a superhero. Name a festival celebrated in Southeast Asia. Anyone can say \"apple\" or \"Batman\". Can you find the answer nobody else thinks of?\n\nTHE DAILY DIG\nEveryone gets the same prompts in the same order each day. You have 25 seconds per prompt and 3 lives. Keep digging for as long as you like, and watch your drill bore down through the strata with every answer.\n\nSTRIKE IT RARE\nCommon answers are Dirt. Smarter ones hit Copper, Emerald and Ruby. Every prompt hides exactly one Diamond, the rarest answer of all.\n\nTNT TOSS\nPlay with 2 to 8 friends online or pass one phone around. Name an answer to toss the lit TNT to the next miner. Wrong? Keep trying until the fuse runs out. The fuse gets shorter with every pass. Last miner standing wins.\n\nMORE WAYS TO DIG\n- Unlimited digs whenever you want more\n- Replay any past daily dig from the archive\n- Themed shafts: geography, science, sport, film, food, nature, culture and everyday life\n- Over 100 prompts with thousands of accepted answers, including plenty of Southeast Asian ones\n- Forgiving spelling: small typos and plurals still count\n- Compare digs with friends using a simple friend code\n- Unlock streak buddies by digging every day\n\nNo sign-up, no ads, no tracking.",
+        "keywords": [
+          "trivia",
+          "quiz",
+          "daily",
+          "word",
+          "puzzle",
+          "party",
+          "multiplayer",
+          "friends",
+          "categories",
+          "brain",
+          "malaysia",
+          "tnt",
+          "mining"
+        ],
+        "releaseNotes": "First release. Happy digging!",
+        "supportUrl": "https://sheangzai.github.io/DeepVein/privacy/",
+        "privacyPolicyUrl": "https://sheangzai.github.io/DeepVein/privacy/"
+      }
+    },
+    "release": {
+      "automaticRelease": true,
+      "phasedRelease": false
+    },
+    "review": {
+      "firstName": "Timothy",
+      "lastName": "Lam",
+      "email": "timothy.devstudio@gmail.com",
+      "phone": "+60 12 328 6566",
+      "demoRequired": false,
+      "notes": "No login is needed. Online features (friends, daily leaderboard, online TNT Toss rooms) use an anonymous account created automatically on first use; no email or personal details are collected.\n\nTo try the main mode, tap Start digging on the home screen and type any answer that fits the prompt (for example \"Red\" for \"Name a colour\").\n\nTNT Toss online needs two devices in the same room. To try it on one device, open TNT Toss and choose PASS & PLAY.\n\nThe online account and all its data can be deleted from the profile screen (Miner on the home screen > Delete my online data). Display names are only shown to players the user adds with a friend code or meets in a game room."
+    }
+  }
+}

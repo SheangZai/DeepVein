@@ -8,6 +8,7 @@ import { Gem } from '@/components/gem';
 import { Icon } from '@/components/icons';
 import { Body, Button, Card, Heading, Input, Label, Muted, Row, Screen } from '@/components/ui';
 import { BUDDIES, depthFor } from '@/game/tiers';
+import { cleanName, isOffensive } from '@/lib/names';
 import { liveStreak, progressStore, setBuddy, setPlayerName } from '@/lib/progress';
 import { addFriend, deleteAccount, getProfile, updateDisplayName, type Profile } from '@/lib/social';
 import { useStore } from '@/lib/storage';
@@ -127,8 +128,14 @@ function OnlineAccount() {
   }
 
   const saveName = async () => {
-    const trimmed = name.trim();
-    if (!trimmed || trimmed === profile.display_name) return;
+    if (!name.trim()) return;
+    if (isOffensive(name)) {
+      Alert.alert('Pick another name', 'Other miners can see your name, so keep it friendly.');
+      setName(profile.display_name);
+      return;
+    }
+    const trimmed = cleanName(name);
+    if (trimmed === profile.display_name) return;
     try {
       await updateDisplayName(trimmed);
       setPlayerName(trimmed);

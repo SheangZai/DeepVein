@@ -10,14 +10,14 @@
     "backgroundColor": "#140f0b",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.deepvein.app",
+      "bundleIdentifier": "com.timothy.deepvein",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.deepvein.app",
+      "package": "com.timothy.deepvein",
       "adaptiveIcon": {
         "backgroundColor": "#140f0b",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
