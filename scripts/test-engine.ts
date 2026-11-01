@@ -55,7 +55,7 @@ async function main() {
   t += tnt.BOOM_PAUSE_MS + 1;
   s = tnt.tick(s, t, rand);
   assert(s.phase === 'playing' && s.used.length === 0, 'new round started');
-  assert(s.turn === holder, 'boomed player restarts');
+  assert(s.turn !== holder && s.turn !== null, 'next miner starts after a boom');
 
   // A player leaving mid-turn passes the TNT on.
   s = tnt.removePlayer(s, s.turn!, t);

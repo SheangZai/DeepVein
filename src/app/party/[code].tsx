@@ -5,6 +5,7 @@ import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 
 import { usePlayerSheet } from '@/components/player-sheet';
 import { TntBoard, useTicker } from '@/components/tnt-board';
+import { useBoomSound } from '@/lib/music';
 import { ActivityLog, Arena, HudBox, HudRow, TntScreen, useTableFeed } from '@/components/tnt-arena';
 import { TntTitle, TntStats, Waiting } from '@/components/tnt-lobby';
 import { Button, Center, Heading, Muted, Row, Screen } from '@/components/ui';
@@ -28,6 +29,7 @@ export default function OnlineRoom() {
   const blocked = useBlocked();
   const state = useMemo(() => maskBlocked(room.state, blocked), [room.state, blocked]);
   const feed = useTableFeed(state);
+  useBoomSound(room.state);
   const playerSheet = usePlayerSheet('tnt-room');
   const openPlayer = (p: { uid?: string; name: string }) => p.uid && playerSheet.open({ uid: p.uid, name: p.name });
   // Public rooms are ranked; private rooms are casual.

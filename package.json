@@ -8,6 +8,7 @@
     "@expo/ui": "~58.0.25",
     "@supabase/supabase-js": "^2.109.0",
     "expo": "~58.0.21",
+    "expo-audio": "~58.0.11",
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.13",
     "expo-device": "~58.0.5",

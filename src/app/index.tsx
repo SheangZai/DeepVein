@@ -10,6 +10,7 @@ import { Button, Card, IconBadge, Label, Row } from '@/components/ui';
 import { currentDigNo } from '@/game/schedule';
 import { depthFor } from '@/game/tiers';
 import { MAX_PLAYERS, MIN_FUSE_MS, MIN_PLAYERS, START_FUSE_MS, START_HEARTS } from '@/game/tnt';
+import { setSound, settingsStore } from '@/lib/music';
 import { buddyFor, liveStreak, progressStore } from '@/lib/progress';
 import { useStore } from '@/lib/storage';
 import { C, F, R, S } from '@/theme';
@@ -25,6 +26,7 @@ function useNow(intervalMs: number) {
 
 export default function Home() {
   const progress = useStore(progressStore);
+  const { sound } = useStore(settingsStore);
   const now = useNow(30_000);
   const digNo = currentDigNo(now);
   const today = progress.daily[digNo];
@@ -37,6 +39,14 @@ export default function Home() {
       <Strata dim={0.2} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={sound ? 'Turn sound off' : 'Turn sound on'}
+            onPress={() => setSound(!sound)}
+            hitSlop={10}
+            style={({ pressed }) => [styles.soundBtn, pressed && styles.pressed]}>
+            <Icon name={sound ? 'sound' : 'muted'} size={22} color={sound ? C.accent : C.faint} />
+          </Pressable>
           <View style={styles.logoRow}>
             <Icon name="pickaxe" size={30} color={C.accent} strokeWidth={2.4} />
             <Text style={styles.logo}>DEEPVEIN</Text>
@@ -172,6 +182,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   header: { alignItems: 'center', gap: S.xs, marginBottom: S.sm },
+  soundBtn: { position: 'absolute', right: 0, top: 0, padding: S.xs, zIndex: 1 },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   logo: {
     color: C.accent,

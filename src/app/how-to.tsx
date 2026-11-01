@@ -62,7 +62,7 @@ export default function HowTo() {
           Multiplayer for 2–8 miners. Name an answer that fits the category to pass the lit TNT. Wrong answers
           and repeats don’t count, but you can keep trying until the fuse runs out. The fuse starts at{' '}
           {START_FUSE_MS / 1000} seconds and gets shorter with every pass, down to {MIN_FUSE_MS / 1000}. If it
-          blows on you, you lose a heart and a new category starts. Last miner standing wins.
+          blows on you, you lose a heart and the next miner starts a new category. Last miner standing wins.
         </Body>
       </Card>
     </Screen>

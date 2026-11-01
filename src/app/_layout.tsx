@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { WebFrame } from '@/components/web-frame';
+import { startMusic } from '@/lib/music';
 import { C, F } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -37,6 +38,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  useEffect(() => {
+    startMusic();
+  }, []);
 
   if (!ready) return null;
 

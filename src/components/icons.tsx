@@ -183,6 +183,20 @@ const ICONS = {
       <Path d="M8 16H3v5" />
     </>
   ),
+  sound: (
+    <>
+      <Path d="M11 5 6 9H2v6h4l5 4z" />
+      <Path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <Path d="M19 5a10 10 0 0 1 0 14" />
+    </>
+  ),
+  muted: (
+    <>
+      <Path d="M11 5 6 9H2v6h4l5 4z" />
+      <Path d="m22 9-6 6" />
+      <Path d="m16 9 6 6" />
+    </>
+  ),
   home: (
     <>
       <Path d="M3 10.5 12 3l9 7.5" />

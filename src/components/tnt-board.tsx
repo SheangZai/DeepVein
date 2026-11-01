@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type TextInputInstance } from 'react-native';
 
 import type { TntState } from '@/game/tnt';
+import { useTension } from '@/lib/music';
 import { C, F, R, S } from '@/theme';
 
 import { FuseBar } from './fuse-bar';
@@ -64,6 +65,8 @@ export function TntBoard({
   const remaining = Math.max(0, state.fuseEndsAt - (now + offset));
   const fraction = playing ? remaining / state.fuseMs : 0;
   const standing = state.players.filter((p) => p.alive).length;
+  // Nervous music for the last stretch of the fuse.
+  useTension(playing && fraction < 0.3);
   const me = myId === null ? holder : state.players.find((p) => p.id === myId);
   const boomed = state.phase === 'boom' && state.lastEvent?.kind === 'boom'
     ? state.players.find((p) => p.id === state.lastEvent?.playerId)

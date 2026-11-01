@@ -30,8 +30,38 @@ export const FULL_COUNTDOWN_MS = 5_000;
 /** Public tables return to the lobby this long after a game ends. */
 export const RESULTS_PAUSE_MS = 8_000;
 
-/** Categories need enough answers that a full table can keep passing. */
-export const TNT_PROMPT_IDS = PROMPTS.filter((p) => p.entries.length >= 20).map((p) => p.id);
+/**
+ * Too specialised for a fast party round: most players can't name one in a few
+ * seconds. They stay in daily digs and shafts.
+ */
+const TNT_SKIP = new Set([
+  'state-capitals',
+  'landlocked',
+  'european-capitals',
+  'moons',
+  'clouds',
+  'constellations',
+  'nfl',
+  'english-champions',
+  'olympic-hosts',
+  'f1-champions',
+  'premier-league-2526',
+  'ballon-dor',
+  'best-picture',
+  'ghibli',
+  'cheese',
+  'not-fish',
+  'flightless-birds',
+  'sharks',
+  'marsupials',
+  'greek-letters',
+  'nato-alphabet',
+  'shakespeare',
+  'us-presidents',
+]);
+
+/** Broad categories with enough answers that a full table can keep passing. */
+export const TNT_PROMPT_IDS = PROMPTS.filter((p) => p.entries.length >= 20 && !TNT_SKIP.has(p.id)).map((p) => p.id);
 
 export interface TntPlayer {
   id: string;
@@ -216,10 +246,9 @@ export function tick(s: TntState, now: number, rand: () => number): TntState {
     return finishIfDecided(boomed, now) ?? boomed;
   }
   if (s.phase === 'boom' && now >= s.resumeAt) {
+    // The next miner after the one who blew up starts the new category.
     const victim = s.lastEvent?.kind === 'boom' ? s.lastEvent.playerId : s.turn;
-    const victimAlive = s.players.find((p) => p.id === victim)?.alive;
-    const first = victimAlive ? victim : nextAliveAfter(s, victim);
-    return startRound(s, first, now, rand);
+    return startRound(s, victim ? nextAliveAfter(s, victim) : s.turn, now, rand);
   }
   return s;
 }

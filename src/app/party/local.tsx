@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/icons';
 import { TntBoard } from '@/components/tnt-board';
+import { useBoomSound } from '@/lib/music';
 import { ActivityLog, Arena, HudBox, HudRow, Panel, TntScreen, useTableFeed } from '@/components/tnt-arena';
 import { TntStats, TntTitle } from '@/components/tnt-lobby';
 import { Button, Input, Row } from '@/components/ui';
@@ -38,6 +39,7 @@ export default function LocalParty() {
   const [names, setNames] = useState<string[]>(() => [progressStore.get().playerName || 'Player 1', 'Player 2']);
   const [state, setState] = useState<TntState>(newLobby);
   const feed = useTableFeed(state);
+  useBoomSound(state);
 
   useEffect(() => {
     if (state.phase !== 'playing' && state.phase !== 'boom') return;
