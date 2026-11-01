@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+  Source for public/og.png, the image shown when deepvein.app is shared.
+  Rebuild with: node scripts/make-og.js
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Lilita; src: url('../../node_modules/@expo-google-fonts/lilita-one/400Regular/LilitaOne_400Regular.ttf'); }
+  @font-face { font-family: Rubik; font-weight: 500; src: url('../../node_modules/@expo-google-fonts/rubik/500Medium/Rubik_500Medium.ttf'); }
+  @font-face { font-family: Rubik; font-weight: 700; src: url('../../node_modules/@expo-google-fonts/rubik/700Bold/Rubik_700Bold.ttf'); }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    font-family: Rubik, sans-serif;
+    color: #f6ecdc;
+    background:
+      radial-gradient(ellipse 60% 70% at 78% 55%, rgba(255, 122, 47, 0.18), transparent 70%),
+      linear-gradient(180deg, #4a3422 0%, #4a3422 14%, #3b2819 14%, #3b2819 32%, #2d1e14 32%, #2d1e14 52%, #22170f 52%, #22170f 72%, #1a110b 72%, #1a110b 88%, #120c08 88%);
+    display: flex;
+    align-items: center;
+    padding: 0 80px;
+    gap: 64px;
+  }
+  .icon {
+    width: 300px; height: 300px; flex: none;
+    image-rendering: pixelated;
+    border-radius: 48px;
+    border: 6px solid #ffc145;
+    box-shadow: 0 0 60px rgba(255, 193, 69, 0.35), 0 18px 0 #0a0604;
+  }
+  .text { display: flex; flex-direction: column; gap: 22px; }
+  h1 {
+    font-family: Lilita, sans-serif; font-weight: 400;
+    font-size: 132px; line-height: 0.95; letter-spacing: 4px;
+    color: #ffc145;
+    text-shadow: 0 8px 0 #b97a12, 0 14px 30px rgba(0, 0, 0, 0.5);
+  }
+  .tag { font-size: 35px; font-weight: 700; line-height: 1.2; }
+  .tag em { font-style: normal; color: #ff5a6e; }
+  .pills { display: flex; gap: 14px; margin-top: 6px; }
+  .pill {
+    font-size: 24px; font-weight: 500;
+    padding: 10px 20px; border-radius: 999px;
+    background: rgba(10, 6, 4, 0.6); border: 2px solid #4a3627;
+  }
+  .url { font-size: 30px; font-weight: 700; color: #ffc145; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <img class="icon" src="../../assets/images/icon.png" alt="">
+  <div class="text">
+    <h1>DEEPVEIN</h1>
+    <div class="tag">Pass the <em>TNT</em> before it blows.<br>Dig the answers nobody else finds.</div>
+    <div class="pills">
+      <span class="pill">Free</span>
+      <span class="pill">2–8 players</span>
+      <span class="pill">Southeast Asian trivia</span>
+    </div>
+    <div class="url">deepvein.app</div>
+  </div>
+</body>
+</html>
