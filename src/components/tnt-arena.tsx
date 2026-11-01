@@ -219,8 +219,18 @@ function Ledge({ width, lit }: { width: number; lit?: boolean }) {
   );
 }
 
-/** Bundle of dynamite with a fuse; the spark flickers while lit. */
-export function TntSprite({ size = 52, lit = true }: { size?: number; lit?: boolean }) {
+/** Point on the sprite's fuse curve (viewBox units), t = 0 at the sticks, 1 at the tip. */
+function fusePoint(t: number) {
+  const u = 1 - t;
+  // Cubic curve (24,18) → (24,10) → (30,8) → (34,6).
+  const x = u * u * u * 24 + 3 * u * u * t * 24 + 3 * u * t * t * 30 + t * t * t * 34;
+  const y = u * u * u * 18 + 3 * u * u * t * 10 + 3 * u * t * t * 8 + t * t * t * 6;
+  return { x, y };
+}
+const FUSE_LENGTH = 16;
+
+/** Bundle of dynamite with a fuse; the spark flickers while lit. `fuse` (0..1) burns the fuse down. */
+export function TntSprite({ size = 52, lit = true, fuse = 1 }: { size?: number; lit?: boolean; fuse?: number }) {
   const reduceMotion = useReducedMotion();
   const flicker = useSharedValue(1);
   useEffect(() => {
@@ -233,10 +243,19 @@ export function TntSprite({ size = 52, lit = true }: { size?: number; lit?: bool
     return () => cancelAnimation(flicker);
   }, [lit, reduceMotion, flicker]);
   const spark = useAnimatedStyle(() => ({ transform: [{ scale: flicker.value }] }));
+  const f = Math.max(0.04, Math.min(1, fuse));
+  const tip = fusePoint(f);
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox="0 0 48 48">
-        <Path d="M24 18 C24 10 30 8 34 6" stroke="#cbb79a" strokeWidth={2} fill="none" strokeLinecap="round" />
+        <Path
+          d="M24 18 C24 10 30 8 34 6"
+          stroke="#cbb79a"
+          strokeWidth={2}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${FUSE_LENGTH * f} ${FUSE_LENGTH * 2}`}
+        />
         {[10, 19, 28].map((x) => (
           <Rect key={x} x={x} y={17} width={10} height={26} rx={4} fill="#d63a3a" />
         ))}
@@ -247,7 +266,7 @@ export function TntSprite({ size = 52, lit = true }: { size?: number; lit?: bool
         <Rect x={8} y={26} width={32} height={2} fill="rgba(255,255,255,0.15)" />
       </Svg>
       {lit && (
-        <Animated.View style={[styles.spark, { left: (34 / 48) * size - 7, top: (6 / 48) * size - 7 }, spark]}>
+        <Animated.View style={[styles.spark, { left: (tip.x / 48) * size - 7, top: (tip.y / 48) * size - 7 }, spark]}>
           <View style={styles.sparkGlow} />
           <View style={styles.sparkCore} />
         </Animated.View>
@@ -271,6 +290,7 @@ export function Arena({
   focusId,
   bubbles = {},
   fraction = 1,
+  secondsLeft,
   openSeats = 0,
   onPressPlayer,
 }: {
@@ -280,6 +300,8 @@ export function Arena({
   bubbles?: Record<string, Bubble>;
   /** Fuse remaining, 0..1. */
   fraction?: number;
+  /** Whole seconds left on the fuse, shown on the TNT. */
+  secondsLeft?: number;
   /** Empty ledges to draw (lobby). */
   openSeats?: number;
   /** Tap another signed-in player (report / block). */
@@ -347,7 +369,14 @@ export function Arena({
               </View>
             );
           })}
-          <MovingTnt x={tntX} y={tntY} lit={playing} urgent={playing && fraction < 0.3} hidden={!!boomId || state.phase === 'over'} />
+          <MovingTnt
+            x={tntX}
+            y={tntY}
+            lit={playing}
+            fraction={playing ? fraction : 1}
+            secondsLeft={playing ? secondsLeft : undefined}
+            hidden={!!boomId || state.phase === 'over'}
+          />
           {boomId && targetIdx >= 0 && (
             <Animated.View entering={ZoomIn.springify().damping(8)} style={[styles.burst, { left: target.x - 50, top: target.y - 85 }]}>
               <Burst size={100} />
@@ -372,11 +401,28 @@ function ArenaFloor({ width, height }: { width: number; height: number }) {
   );
 }
 
-function MovingTnt({ x, y, lit, urgent, hidden }: { x: number; y: number; lit: boolean; urgent: boolean; hidden: boolean }) {
+function MovingTnt({
+  x,
+  y,
+  lit,
+  fraction,
+  secondsLeft,
+  hidden,
+}: {
+  x: number;
+  y: number;
+  lit: boolean;
+  fraction: number;
+  secondsLeft?: number;
+  hidden: boolean;
+}) {
   const reduceMotion = useReducedMotion();
   const tx = useSharedValue(x);
   const ty = useSharedValue(y);
   const rot = useSharedValue(0);
+  const glow = useSharedValue(0);
+  // Calm, then nervous, then frantic as the fuse runs down.
+  const stage = !lit ? 0 : fraction < 0.3 ? 3 : fraction < 0.6 ? 2 : 1;
 
   useEffect(() => {
     tx.value = reduceMotion ? x : withSpring(x, { damping: 14, stiffness: 140 });
@@ -384,24 +430,44 @@ function MovingTnt({ x, y, lit, urgent, hidden }: { x: number; y: number; lit: b
   }, [x, y, tx, ty, reduceMotion]);
 
   useEffect(() => {
-    if (!lit || reduceMotion) {
+    if (stage === 0 || reduceMotion) {
       rot.value = withTiming(0);
-      return;
+    } else {
+      const [angle, d] = stage === 3 ? [12, 55] : stage === 2 ? [8, 120] : [5, 220];
+      rot.value = withRepeat(withSequence(withTiming(-angle, { duration: d }), withTiming(angle, { duration: d })), -1, true);
     }
-    const d = urgent ? 55 : 220;
-    rot.value = withRepeat(withSequence(withTiming(urgent ? -12 : -5, { duration: d }), withTiming(urgent ? 12 : 5, { duration: d })), -1, true);
-    return () => cancelAnimation(rot);
-  }, [lit, urgent, rot, reduceMotion]);
+    if (stage === 3) {
+      glow.value = reduceMotion
+        ? 0.45
+        : withRepeat(withSequence(withTiming(0.7, { duration: 180 }), withTiming(0.2, { duration: 180 })), -1, true);
+    } else {
+      glow.value = withTiming(0, { duration: 150 });
+    }
+    return () => {
+      cancelAnimation(rot);
+      cancelAnimation(glow);
+    };
+  }, [stage, rot, glow, reduceMotion]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ translateX: tx.value - 30 }, { translateY: ty.value - 34 }, { rotate: `${rot.value}deg` }],
     opacity: withTiming(hidden ? 0 : 1, { duration: 120 }),
   }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
 
   return (
     <Animated.View pointerEvents="none" style={[styles.tnt, style]}>
-      <TntSprite size={60} lit={lit} />
+      <Animated.View style={[styles.tntGlow, glowStyle]} />
+      <TntSprite size={60} lit={lit} fuse={fraction} />
       <View style={styles.tntShadow} />
+      {secondsLeft !== undefined && (
+        <Animated.Text
+          key={secondsLeft}
+          entering={reduceMotion ? undefined : ZoomIn.duration(160)}
+          style={[styles.tntCount, stage === 3 && styles.tntCountHot]}>
+          {secondsLeft}
+        </Animated.Text>
+      )}
     </Animated.View>
   );
 }
@@ -562,6 +628,19 @@ const styles = StyleSheet.create({
   openText: { color: C.faint, fontFamily: F.bold, fontSize: 10, letterSpacing: 2 },
   tnt: { position: 'absolute', left: 0, top: 0, width: 60, alignItems: 'center' },
   tntShadow: { width: 40, height: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', marginTop: 2 },
+  tntGlow: { position: 'absolute', top: -6, left: -6, width: 72, height: 72, borderRadius: 36, backgroundColor: C.danger },
+  tntCount: {
+    position: 'absolute',
+    top: -20,
+    width: 60,
+    textAlign: 'center',
+    color: C.text,
+    fontFamily: F.display,
+    fontSize: 20,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowRadius: 4,
+  },
+  tntCountHot: { color: C.danger, fontSize: 24, top: -24 },
   spark: { position: 'absolute', width: 14, height: 14, alignItems: 'center', justifyContent: 'center' },
   sparkGlow: { position: 'absolute', width: 14, height: 14, borderRadius: 7, backgroundColor: C.fuse, opacity: 0.55 },
   sparkCore: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.spark },

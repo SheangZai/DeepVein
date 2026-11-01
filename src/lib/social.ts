@@ -124,10 +124,19 @@ export async function reportRanked(matchId: string, placements: string[]) {
   return { rating: row?.rating ?? null, delta: row?.delta ?? null };
 }
 
+/** Marks you as a player in a ranked match that just started, so it counts even if someone quits. */
+export async function joinRanked(matchId: string) {
+  await ensureSession();
+  const { error } = await client().rpc('ranked_join', { p_match: matchId });
+  if (error) throw error;
+}
+
 /** Your rating plus the top of the ladder. Throws if ranked play isn't set up on the backend. */
 export async function getRanked(limit = 10) {
   const id = await ensureSession();
   const sb = client();
+  // Settle any of your games still waiting on a result first. Optional: older backends lack it.
+  await sb.rpc('settle_my_ranked');
   const [mine, top] = await Promise.all([
     sb.from('profiles').select('rating, ranked_games').eq('id', id).single(),
     sb.rpc('ranked_top', { p_limit: limit }),

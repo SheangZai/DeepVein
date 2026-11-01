@@ -137,7 +137,7 @@ export function TntBoard({
       />
       <CategoryBanner state={state} />
       {notice && <Text style={styles.notice}>{notice}</Text>}
-      <Arena state={state} focusId={myId ?? state.players[0]?.id ?? null} bubbles={feed.bubbles} fraction={fraction} />
+      <Arena state={state} focusId={myId ?? state.players[0]?.id ?? null} bubbles={feed.bubbles} fraction={fraction} secondsLeft={Math.ceil(remaining / 1000)} />
       <Text style={[styles.status, (myTurn || boomed) && { color: C.fuse }, retry && { color: C.danger }]}>
         {status ? `▸ ${status}` : ' '}
       </Text>

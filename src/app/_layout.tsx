@@ -13,6 +13,7 @@ import Stack from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { WebFrame } from '@/components/web-frame';
 import { C, F } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -42,24 +43,26 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={theme}>
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: '#4a3422' },
-          headerTintColor: C.text,
-          headerTitleStyle: { fontFamily: F.display, fontSize: 22 },
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: C.bg },
-        }}>
-        <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
-        <Stack.Screen name="dig" options={{ title: 'Dig', gestureEnabled: false }} />
-        <Stack.Screen name="archive" options={{ title: 'Archive' }} />
-        <Stack.Screen name="shafts" options={{ title: 'Shafts' }} />
-        <Stack.Screen name="profile" options={{ title: 'Miner' }} />
-        <Stack.Screen name="how-to" options={{ title: 'How to dig', presentation: 'modal' }} />
-        <Stack.Screen name="party/index" options={{ title: 'TNT Toss' }} />
-        <Stack.Screen name="party/local" options={{ title: 'Pass & Play', gestureEnabled: false }} />
-        <Stack.Screen name="party/[code]" options={{ title: 'TNT Toss', gestureEnabled: false }} />
-      </Stack>
+      <WebFrame>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: '#4a3422' },
+            headerTintColor: C.text,
+            headerTitleStyle: { fontFamily: F.display, fontSize: 22 },
+            headerShadowVisible: false,
+            contentStyle: { backgroundColor: C.bg },
+          }}>
+          <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
+          <Stack.Screen name="dig" options={{ title: 'Dig', gestureEnabled: false }} />
+          <Stack.Screen name="archive" options={{ title: 'Archive' }} />
+          <Stack.Screen name="shafts" options={{ title: 'Shafts' }} />
+          <Stack.Screen name="profile" options={{ title: 'Miner' }} />
+          <Stack.Screen name="how-to" options={{ title: 'How to dig', presentation: 'modal' }} />
+          <Stack.Screen name="party/index" options={{ title: 'TNT Toss' }} />
+          <Stack.Screen name="party/local" options={{ title: 'Pass & Play', gestureEnabled: false }} />
+          <Stack.Screen name="party/[code]" options={{ title: 'TNT Toss', gestureEnabled: false }} />
+        </Stack>
+      </WebFrame>
     </ThemeProvider>
   );
 }
