@@ -21,14 +21,26 @@ function client() {
   return supabase;
 }
 
-/** Signs in anonymously on first use; returns the user id. */
-export async function ensureSession(): Promise<string> {
-  const sb = client();
-  const { data } = await sb.auth.getSession();
-  if (data.session) return data.session.user.id;
-  const { data: signedIn, error } = await sb.auth.signInAnonymously();
-  if (error || !signedIn.user) throw error ?? new Error('Sign-in failed');
-  return signedIn.user.id;
+let signingIn: Promise<string> | null = null;
+
+/**
+ * Signs in anonymously on first use; returns the user id. Calls made at the
+ * same time share one sign-in, so a screen doesn't create several accounts.
+ */
+export function ensureSession(): Promise<string> {
+  if (!signingIn) {
+    signingIn = (async () => {
+      const sb = client();
+      const { data } = await sb.auth.getSession();
+      if (data.session) return data.session.user.id;
+      const { data: signedIn, error } = await sb.auth.signInAnonymously();
+      if (error || !signedIn.user) throw error ?? new Error('Sign-in failed');
+      return signedIn.user.id;
+    })().finally(() => {
+      signingIn = null;
+    });
+  }
+  return signingIn;
 }
 
 export async function getProfile(): Promise<Profile> {
