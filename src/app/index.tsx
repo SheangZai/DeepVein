@@ -3,12 +3,13 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Gem, GemRow } from '@/components/gem';
+import { Gem } from '@/components/gem';
 import { Icon, type IconName } from '@/components/icons';
 import { Strata } from '@/components/strata';
-import { Button, Card, IconBadge, Label, Muted, Row } from '@/components/ui';
-import { currentDigNo, formatCountdown, msUntilNextDig } from '@/game/schedule';
-import { depthFor, DIG_LIVES, SECONDS_PER_PROMPT, zoneFor } from '@/game/tiers';
+import { Button, Card, IconBadge, Label, Row } from '@/components/ui';
+import { currentDigNo } from '@/game/schedule';
+import { depthFor } from '@/game/tiers';
+import { MAX_PLAYERS, MIN_FUSE_MS, MIN_PLAYERS, START_FUSE_MS, START_HEARTS } from '@/game/tnt';
 import { buddyFor, liveStreak, progressStore } from '@/lib/progress';
 import { useStore } from '@/lib/storage';
 import { C, F, R, S } from '@/theme';
@@ -24,7 +25,7 @@ function useNow(intervalMs: number) {
 
 export default function Home() {
   const progress = useStore(progressStore);
-  const now = useNow(1000);
+  const now = useNow(30_000);
   const digNo = currentDigNo(now);
   const today = progress.daily[digNo];
   const streak = liveStreak(progress, now);
@@ -70,45 +71,33 @@ export default function Home() {
           </View>
         </Pressable>
 
-        <Card style={styles.daily}>
-          <Row style={styles.dailyTop}>
-            <Label style={styles.dailyLabel}>Daily Dig #{digNo}</Label>
-            {today && (
-              <Row style={styles.done}>
-                <Icon name="check" size={14} color={C.good} strokeWidth={3} />
-                <Text style={styles.doneText}>Dug</Text>
-              </Row>
-            )}
+        <Card style={styles.hero}>
+          <Row style={styles.heroTop}>
+            <Label style={styles.heroLabel}>TNT Toss · Multiplayer</Label>
+            <Icon name="tnt" size={22} color={C.danger} />
           </Row>
-          {today ? (
-            <>
-              <Text style={styles.dailyScore}>{depthFor(today.score).toLocaleString()} m</Text>
-              <Text style={styles.zone}>
-                {zoneFor(depthFor(today.score)).name} · {today.score} pts · {today.answers.length} dug
-              </Text>
-              <GemRow answers={today.answers} size={30} gap={6} />
-              <Row style={styles.countdown}>
-                <Icon name="clock" size={16} color={C.muted} />
-                <Muted>Next vein opens in {formatCountdown(msUntilNextDig(now))}</Muted>
-              </Row>
-              <Button label="See results" variant="secondary" onPress={openDaily} />
-            </>
-          ) : (
-            <>
-              <Text style={styles.dailyTitle}>Today’s vein is open</Text>
-              <Row style={styles.meta}>
-                <MetaPill icon="infinity" text="Endless" />
-                <MetaPill icon="heart" text={`${DIG_LIVES} lives`} />
-                <MetaPill icon="clock" text={`${SECONDS_PER_PROMPT}s each`} />
-                <MetaPill icon="gem" text="Rare = deep" />
-              </Row>
-              <Button label="Start digging" icon="pickaxe" onPress={openDaily} />
-            </>
-          )}
+          <Text style={styles.heroTitle}>Pass the TNT before it blows</Text>
+          <Row style={styles.meta}>
+            <MetaPill icon="user" text={`${MIN_PLAYERS}–${MAX_PLAYERS} miners`} />
+            <MetaPill icon="heart" text={`${START_HEARTS} hearts`} />
+            <MetaPill icon="clock" text={`${START_FUSE_MS / 1000}s → ${MIN_FUSE_MS / 1000}s fuse`} />
+          </Row>
+          <Button label="Play TNT Toss" icon="tnt" onPress={() => router.push('/party')} />
         </Card>
 
         <Label style={styles.section}>More ways to dig</Label>
         <View style={styles.tiles}>
+          <Tile
+            icon="pickaxe"
+            color={C.accent}
+            title={`Daily #${digNo}`}
+            sub={
+              today
+                ? `Dug · ${depthFor(today.score).toLocaleString()} m`
+                : 'Today’s vein is open'
+            }
+            onPress={openDaily}
+          />
           <Tile
             icon="infinity"
             color="#7cc8ff"
@@ -118,7 +107,6 @@ export default function Home() {
           />
           <Tile icon="calendar" color="#b59cff" title="Archive" sub="Past daily digs" onPress={() => router.push('/archive')} />
           <Tile icon="layers" color={C.good} title="Shafts" sub="Themed packs" onPress={() => router.push('/shafts')} />
-          <Tile icon="tnt" color={C.danger} title="TNT Toss" sub="Multiplayer" onPress={() => router.push('/party')} />
         </View>
 
         <Row style={styles.footer}>
@@ -220,28 +208,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buddyEmoji: { fontSize: 18 },
-  daily: {
+  hero: {
     gap: S.md,
-    borderColor: C.accent,
-    borderTopColor: '#ffe08a',
-    borderBottomColor: C.accentEdge,
+    borderColor: C.danger,
     borderWidth: 2,
     borderBottomWidth: 5,
     paddingVertical: S.xl,
-    shadowColor: C.accent,
+    shadowColor: C.danger,
     shadowOpacity: 0.35,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
     elevation: 8,
   },
-  dailyTop: { justifyContent: 'space-between' },
-  dailyLabel: { color: C.accent },
-  done: { gap: 4 },
-  doneText: { color: C.good, fontFamily: F.bold, fontSize: 13 },
-  dailyTitle: { color: C.text, fontSize: 30, fontFamily: F.display, lineHeight: 34 },
-  dailyScore: { color: C.accent, fontSize: 52, fontFamily: F.display, lineHeight: 56 },
-  zone: { color: C.text, fontSize: 15, fontFamily: F.semi, marginTop: -S.sm },
-  countdown: { gap: 6 },
+  heroTop: { justifyContent: 'space-between' },
+  heroLabel: { color: C.danger },
+  heroTitle: { color: C.text, fontSize: 30, fontFamily: F.display, lineHeight: 34 },
   meta: { flexWrap: 'wrap', gap: 6 },
   pill: {
     gap: 5,

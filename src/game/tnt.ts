@@ -15,10 +15,13 @@ import { cleanName } from '@/lib/names';
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 8;
 export const START_HEARTS = 3;
-export const START_FUSE_MS = 25_000;
-export const MIN_FUSE_MS = 8_000;
-/** Each pass keeps this share of the fuse: 25s → 8s takes about 14 passes. */
-export const FUSE_DECAY = 0.92;
+/** Fuse for each pass: 20s for the first answer, then 16, 14, 12, then 10s from there on. */
+export const FUSE_STEPS_MS = [20_000, 16_000, 14_000, 12_000, 10_000];
+export const START_FUSE_MS = FUSE_STEPS_MS[0];
+export const MIN_FUSE_MS = FUSE_STEPS_MS[FUSE_STEPS_MS.length - 1];
+
+/** The next, shorter fuse after a pass. */
+export const nextFuseMs = (current: number) => FUSE_STEPS_MS.find((ms) => ms < current) ?? MIN_FUSE_MS;
 export const BOOM_PAUSE_MS = 2_500;
 /** Public lobbies start on their own once enough miners are in. */
 export const LOBBY_COUNTDOWN_MS = 15_000;
@@ -176,7 +179,7 @@ export function submitAnswer(s: TntState, playerId: string, text: string, now: n
   if (s.usedIds.includes(entry.id)) {
     return bump(s, { lastEvent: { kind: 'reject', playerId, text: entry.name, reason: 'used' } });
   }
-  const fuseMs = Math.max(MIN_FUSE_MS, Math.round(s.fuseMs * FUSE_DECAY));
+  const fuseMs = nextFuseMs(s.fuseMs);
   return bump(s, {
     used: [entry.name, ...s.used],
     usedIds: [...s.usedIds, entry.id],

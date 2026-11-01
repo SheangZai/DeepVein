@@ -33,7 +33,8 @@ async function main() {
   const answer = prompt.entries[0].name;
   s = tnt.submitAnswer(s, first, answer, t);
   assert(s.turn !== first, 'turn passes after valid answer');
-  assert(s.fuseMs < tnt.START_FUSE_MS, 'fuse shortens');
+  assert(s.fuseMs === 16_000, 'fuse shortens to 16s');
+  assert([16_000, 15_000, 10_000, 9_000].map(tnt.nextFuseMs).join() === '14000,14000,10000,10000', 'fuse steps 16 → 14 … floor 10');
 
   // Repeating it is rejected and the turn stays.
   const holder = s.turn!;
