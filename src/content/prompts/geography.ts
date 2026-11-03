@@ -1,3 +1,4 @@
+import { addedOnDig, DAILY_V2_DIG } from '../added';
 import type { PromptSource } from '../types';
 
 export const geography: PromptSource[] = [
@@ -246,4 +247,124 @@ export const geography: PromptSource[] = [
     ],
     diamond: 'Salween|Thanlwin|Nu River',
   },
+  ...addedOnDig(DAILY_V2_DIG, [
+    {
+      id: 'malaysian-states',
+      category: 'geography',
+      text: 'Name a Malaysian state or federal territory',
+      dirt: ['Selangor', 'Johor|Johore', 'Penang|Pulau Pinang|Pinang', 'Kuala Lumpur|KL'],
+      fools: ['Sabah'],
+      copper: [
+        'Sarawak', 'Kedah', 'Kelantan', 'Malacca|Melaka', 'Pahang', 'Perak', 'Terengganu|Trengganu',
+        'Negeri Sembilan|Negri Sembilan|N9', 'Putrajaya',
+      ],
+      emerald: ['Perlis'],
+      diamond: 'Labuan',
+    },
+    {
+      id: 'indonesian-islands',
+      category: 'geography',
+      text: 'Name an Indonesian island',
+      dirt: ['Bali', 'Java|Jawa', 'Sumatra|Sumatera'],
+      fools: ['Borneo|Kalimantan'],
+      copper: [
+        'Sulawesi|Celebes', 'Lombok', 'New Guinea|Papua', 'Komodo', 'Bintan', 'Batam', 'Flores', 'Timor',
+        'Madura', 'Bangka', 'Belitung|Billiton', 'Sumba', 'Halmahera', 'Ambon', 'Gili Trawangan|Gili T',
+        'Nusa Penida', 'Sumbawa', 'Seram|Ceram',
+      ],
+      emerald: [
+        'Nias', 'Siberut', 'Ternate', 'Tidore', 'Buru', 'Rinca', 'Weh|Pulau Weh|Sabang', 'Gili Air', 'Gili Meno',
+        'Nusa Lembongan', 'Waigeo', 'Simeulue', 'Morotai', 'Biak', 'Alor', 'Rote|Roti', 'Savu|Sawu', 'Bawean',
+        'Natuna|Natuna Besar', 'Banda Neira|Banda', 'Lembata', 'Bunaken', 'Karimunjawa',
+      ],
+      ruby: ['Enggano', 'Selayar', 'Yamdena', 'Wetar', 'Obi', 'Peleng', 'Muna', 'Buton', 'Kabaena'],
+      diamond: 'Run|Pulau Run|Rhun',
+    },
+    {
+      id: 'asia-capitals',
+      category: 'geography',
+      text: 'Name the capital city of an Asian country',
+      dirt: ['Tokyo', 'Beijing|Peking', 'Seoul', 'Bangkok', 'Kuala Lumpur|KL'],
+      fools: ['Singapore'],
+      copper: [
+        'Jakarta', 'Manila', 'Hanoi', 'New Delhi|Delhi', 'Taipei', 'Phnom Penh', 'Vientiane',
+        'Bandar Seri Begawan', 'Naypyidaw|Naypyitaw|Nay Pyi Taw', 'Dili', 'Islamabad', 'Tehran', 'Baghdad',
+        'Riyadh', 'Abu Dhabi', 'Doha', 'Kathmandu', 'Dhaka', 'Kabul', 'Ankara', 'Pyongyang', 'Colombo',
+      ],
+      emerald: [
+        'Male|Malé', 'Thimphu', 'Ulaanbaatar|Ulan Bator', 'Kuwait City', 'Muscat', "Sanaa|Sana'a", 'Amman',
+        'Damascus', 'Beirut', 'Tashkent', 'Astana', 'Manama', 'Yerevan', 'Tbilisi', 'Baku',
+      ],
+      ruby: ['Bishkek', 'Dushanbe', 'Ashgabat', 'Nicosia'],
+      diamond: 'Sri Jayawardenepura Kotte|Kotte|Sri Jayawardenapura Kotte',
+    },
+    {
+      id: 'oceans-seas',
+      category: 'geography',
+      text: 'Name an ocean or sea',
+      dirt: [
+        'Pacific Ocean|Pacific', 'Atlantic Ocean|Atlantic', 'Indian Ocean', 'South China Sea',
+        'Mediterranean Sea|Mediterranean|Med',
+      ],
+      fools: ['Dead Sea'],
+      copper: [
+        'Arctic Ocean|Arctic', 'Southern Ocean|Antarctic Ocean', 'Red Sea', 'Black Sea', 'Caribbean Sea|Caribbean',
+        'Java Sea', 'Andaman Sea', 'Caspian Sea|Caspian', 'North Sea', 'Arabian Sea', 'Baltic Sea|Baltic',
+        'Philippine Sea', 'Sea of Japan|East Sea', 'Yellow Sea', 'East China Sea', 'Coral Sea', 'Tasman Sea',
+        'Bering Sea', 'Aegean Sea|Aegean', 'Adriatic Sea|Adriatic', 'Celebes Sea|Sulawesi Sea',
+      ],
+      emerald: [
+        'Sulu Sea', 'Banda Sea', 'Timor Sea', 'Arafura Sea', 'Flores Sea', 'Bali Sea', 'Molucca Sea', 'Ionian Sea',
+        'Tyrrhenian Sea', 'Sea of Okhotsk', 'Barents Sea', 'Sargasso Sea', 'Irish Sea', 'Norwegian Sea',
+        'Labrador Sea', 'Weddell Sea', 'Ross Sea', 'Aral Sea', 'Sea of Marmara', 'Sea of Azov', 'Laccadive Sea',
+        'Savu Sea', 'Natuna Sea',
+      ],
+      ruby: [
+        'Ligurian Sea', 'Alboran Sea', 'Kara Sea', 'Laptev Sea', 'Chukchi Sea', 'Beaufort Sea', 'Halmahera Sea',
+        'Seram Sea', 'Bismarck Sea', 'Solomon Sea', 'Wadden Sea', 'Celtic Sea', 'Balearic Sea',
+      ],
+      diamond: 'Bohai Sea|Bohai',
+    },
+    {
+      id: 'island-countries',
+      category: 'geography',
+      text: 'Name a country made up of an island or islands',
+      dirt: ['Singapore', 'Japan', 'Philippines', 'Indonesia', 'Sri Lanka'],
+      fools: ['Maldives'],
+      copper: [
+        'Madagascar', 'New Zealand', 'United Kingdom|UK|Britain|Great Britain', 'Ireland', 'Iceland', 'Cuba',
+        'Jamaica', 'Fiji', 'Mauritius', 'Seychelles', 'Timor-Leste|East Timor', 'Bahrain', 'Malta', 'Cyprus',
+        'Bahamas', 'Haiti', 'Dominican Republic', 'Papua New Guinea|PNG', 'Samoa', 'Tonga', 'Barbados',
+        'Trinidad and Tobago',
+      ],
+      emerald: [
+        'Cape Verde|Cabo Verde', 'Comoros', 'São Tomé and Príncipe|Sao Tome', 'Solomon Islands', 'Vanuatu',
+        'Kiribati', 'Tuvalu', 'Palau', 'Marshall Islands', 'Micronesia', 'Saint Lucia|St Lucia', 'Grenada',
+        'Antigua and Barbuda', 'Dominica', 'Saint Vincent and the Grenadines|St Vincent',
+        'Saint Kitts and Nevis|St Kitts',
+      ],
+      diamond: 'Nauru',
+    },
+    {
+      id: 'deserts',
+      category: 'geography',
+      text: 'Name a desert',
+      dirt: ['Sahara', 'Gobi', 'Kalahari', 'Arabian Desert|Arabian'],
+      fools: ['Antarctic Desert|Antarctica|Antarctic'],
+      copper: [
+        'Atacama', 'Mojave|Mohave', 'Namib', 'Thar|Great Indian Desert', 'Sonoran', 'Great Victoria Desert|Great Victoria',
+        'Simpson Desert|Simpson', 'Taklamakan|Taklimakan', 'Chihuahuan', 'Great Basin', 'Syrian Desert',
+        'Arctic Desert|Arctic', 'Patagonian Desert|Patagonia', 'Great Sandy Desert', 'Death Valley',
+      ],
+      emerald: [
+        'Karakum|Kara Kum', 'Kyzylkum|Kyzyl Kum', 'Dasht-e Kavir|Great Salt Desert', 'Dasht-e Lut|Lut Desert',
+        "Rub' al Khali|Rub al Khali|Empty Quarter", 'Negev', 'Sinai', 'Danakil', 'Gibson Desert', 'Tanami',
+        'Strzelecki', 'Sturt Stony Desert', 'Colorado Desert', 'Painted Desert', 'Black Rock Desert',
+        'Libyan Desert', 'Nubian Desert', 'Judean Desert', 'Wahiba Sands|Sharqiya Sands', 'Ordos', 'Badain Jaran',
+        'Thal',
+      ],
+      ruby: ['Chalbi', 'Kaokoveld', 'Accona', 'Bardenas Reales', 'Lençóis Maranhenses|Lencois Maranhenses'],
+      diamond: 'Tabernas',
+    },
+  ]),
 ];

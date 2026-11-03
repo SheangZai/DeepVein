@@ -1,6 +1,10 @@
-import { hashString, mulberry32, shuffled } from '@/game/rng';
+import type { CategoryId } from './index';
 
-import { promptsInCategory, type CategoryId } from './index';
+export interface ShaftLevel {
+  name: string;
+  /** Prompt ids, easiest level first. Each prompt sits in exactly one level. */
+  prompts: string[];
+}
 
 /** Themed packs of prompts, played level by level. */
 export interface Shaft {
@@ -9,10 +13,8 @@ export interface Shaft {
   title: string;
   emoji: string;
   blurb: string;
-  levels: number;
+  levels: ShaftLevel[];
 }
-
-export const PROMPTS_PER_LEVEL = 5;
 
 export const SHAFTS: Shaft[] = [
   {
@@ -20,56 +22,91 @@ export const SHAFTS: Shaft[] = [
     category: 'geography',
     title: 'Atlas Shaft',
     emoji: '🗺️',
-    blurb: 'Countries, capitals, rivers and the places nobody remembers.',
-    levels: 6,
+    blurb: 'Countries, capitals, islands, seas and the places nobody remembers.',
+    levels: [
+      { name: 'Close to home', prompts: ['southeast-asia', 'sea-capitals', 'malaysian-states', 'indonesian-islands', 'asia'] },
+      { name: 'Asia & Oceania', prompts: ['asia-capitals', 'australia-states', 'eight-thousanders', 'island-countries', 'rivers'] },
+      { name: 'The wide world', prompts: ['africa', 'europe', 'south-america', 'oceans-seas', 'deserts'] },
+      { name: 'Deep cuts', prompts: ['us-states', 'state-capitals', 'canada-provinces', 'landlocked', 'european-capitals'] },
+    ],
   },
   {
     id: 'science',
     category: 'science',
     title: 'Lab Shaft',
     emoji: '🧪',
-    blurb: 'Elements, bones, moons, stars and vitamins.',
-    levels: 5,
+    blurb: 'Bodies, rocks, gems, stars and the people who figured it all out.',
+    levels: [
+      { name: 'Body basics', prompts: ['organs', 'bones', 'muscles', 'vitamins', 'diseases'] },
+      { name: 'Under the ground', prompts: ['rocks-minerals', 'gemstones', 'metals', 'elements', 'dinosaurs'] },
+      { name: 'Up in the sky', prompts: ['planets', 'clouds', 'gases', 'moons', 'constellations'] },
+      { name: 'Big brains', prompts: ['scientists', 'programming-languages', 'units', 'si-units', 'noble-gases'] },
+    ],
   },
   {
     id: 'sports',
     category: 'sports',
     title: 'Stadium Shaft',
     emoji: '🏟️',
-    blurb: 'Teams, champions, host cities and martial arts.',
-    levels: 4,
+    blurb: 'Footballers, shuttlers, champions, board games and esports.',
+    levels: [
+      { name: 'Kick-off', prompts: ['footballers', 'football-terms', 'world-cup-winners', 'martial-arts', 'sports-equipment'] },
+      { name: 'Courts & rackets', prompts: ['badminton-players', 'nba', 'nba-players', 'tennis-champions', 'olympic-sports'] },
+      { name: 'Track, pool & table', prompts: ['water-sports', 'athletics-events', 'board-games', 'esports-games', 'olympic-hosts'] },
+      { name: 'Hall of fame', prompts: ['english-champions', 'premier-league-2526', 'ballon-dor', 'f1-champions', 'nfl'] },
+    ],
   },
   {
     id: 'screen',
     category: 'screen',
     title: 'Cinema Shaft',
     emoji: '🎬',
-    blurb: 'Films, Pokémon, Beatles and instruments.',
-    levels: 5,
+    blurb: 'Cartoons, anime, K-pop, Netflix and the big screen.',
+    levels: [
+      { name: 'Cartoon corner', prompts: ['pixar', 'disney-animated', 'cartoons', 'dwarfs', 'disney-princesses'] },
+      { name: 'Anime & games', prompts: ['anime', 'ghibli', 'pokemon-gen1', 'nintendo-characters', 'mcu'] },
+      { name: 'On the playlist', prompts: ['kpop-groups', 'pop-singers', 'music-genres', 'instruments', 'dances'] },
+      { name: 'Big screen', prompts: ['netflix-series', 'bond-actors', 'best-picture', 'harry-potter-books', 'beatles'] },
+    ],
   },
   {
     id: 'food',
     category: 'food',
     title: 'Kitchen Shaft',
     emoji: '🍜',
-    blurb: 'Southeast Asian dishes, fruits, cheeses and kopi.',
-    levels: 4,
+    blurb: 'Hawker favourites, kuih, spices, sauces and food from all over Asia.',
+    levels: [
+      { name: 'Hawker favourites', prompts: ['sea-dishes', 'noodles', 'kuih', 'coffee-drinks', 'fruits'] },
+      { name: 'Spice rack', prompts: ['spices', 'herbs', 'sauces', 'nuts', 'vegetables'] },
+      { name: 'Around Asia', prompts: ['japanese-food', 'chinese-food', 'indian-food', 'tea', 'seafood'] },
+      { name: 'Bakery & beyond', prompts: ['breads', 'cakes', 'pasta', 'cheese', 'fast-food'] },
+    ],
   },
   {
     id: 'nature',
     category: 'nature',
     title: 'Jungle Shaft',
     emoji: '🌿',
-    blurb: 'Wild cats, sharks, dogs and flowers.',
-    levels: 4,
+    blurb: 'Pets, rainforest creatures, whales, raptors and wild places.',
+    levels: [
+      { name: 'Pets & farms', prompts: ['dog-breeds', 'cat-breeds', 'farm-animals', 'baby-animals', 'houseplants'] },
+      { name: 'Into the jungle', prompts: ['rainforest-animals', 'primates', 'snakes', 'wild-cats', 'nocturnal-animals'] },
+      { name: 'Wet & wild', prompts: ['freshwater-fish', 'whales-dolphins', 'sharks', 'not-fish', 'natural-disasters'] },
+      { name: 'Wild places', prompts: ['safari-animals', 'birds-of-prey', 'flightless-birds', 'marsupials', 'flowers'] },
+    ],
   },
   {
     id: 'words',
     category: 'words',
     title: 'Archive Shaft',
     emoji: '📜',
-    blurb: 'Gods, presidents, colours and car brands.',
-    levels: 5,
+    blurb: 'Brands, legends, empires, landmarks and alphabet soup.',
+    levels: [
+      { name: 'Everyday words', prompts: ['colours', 'languages', 'car-brands', 'phone-brands', 'fashion-brands'] },
+      { name: 'Legends & tales', prompts: ['fairy-tales', 'mythical-creatures', 'greek-gods', 'deadly-sins', 'chinese-zodiac'] },
+      { name: 'History lessons', prompts: ['empires', 'ancient-wonders', 'landmarks', 'painters', 'currencies'] },
+      { name: 'Hard copy', prompts: ['zodiac', 'greek-letters', 'nato-alphabet', 'shakespeare', 'us-presidents'] },
+    ],
   },
   {
     id: 'everyday',
@@ -77,7 +114,14 @@ export const SHAFTS: Shaft[] = [
     title: 'Everyday Shaft',
     emoji: '🧺',
     blurb: 'Makeup, maths, jobs, snacks and everything around the house.',
-    levels: 6,
+    levels: [
+      { name: 'Around the house', prompts: ['kitchen-items', 'furniture', 'rooms', 'bathroom-items', 'tools'] },
+      { name: 'Getting dressed', prompts: ['clothing', 'fabrics', 'makeup', 'family', 'emotions'] },
+      { name: 'School days', prompts: ['school-subjects', 'math-terms', 'shapes', 'computer-parts', 'apps'] },
+      { name: 'Out and about', prompts: ['jobs', 'transport', 'any-sport', 'weather', 'sea-festivals'] },
+      { name: 'Mixed bag', prompts: ['breakfast', 'drinks', 'desserts', 'body-parts', 'superheroes'] },
+      { name: 'Creatures & critters', prompts: ['animals', 'insects', 'sea-creatures', 'birds', 'trees'] },
+    ],
   },
 ];
 
@@ -85,9 +129,6 @@ export function getShaft(id: string): Shaft | undefined {
   return SHAFTS.find((s) => s.id === id);
 }
 
-/** Deterministic prompt list for one level of a shaft. */
-export function shaftLevelPrompts(shaft: Shaft, level: number): string[] {
-  const pool = promptsInCategory(shaft.category).map((p) => p.id);
-  const rand = mulberry32(hashString(`${shaft.id}:${level}`));
-  return shuffled(pool, rand).slice(0, Math.min(PROMPTS_PER_LEVEL, pool.length));
+export function getShaftLevel(shaft: Shaft, level: number): ShaftLevel | undefined {
+  return shaft.levels[level - 1];
 }

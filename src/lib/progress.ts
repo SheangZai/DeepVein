@@ -60,8 +60,9 @@ const INITIAL: Progress = {
 
 export const progressStore = createStore<Progress>('progress:v1', INITIAL);
 
+/** v2: levels were rebuilt with their own questions, so old level results don't carry over. */
 export function shaftKey(shaftId: string, level: number) {
-  return `${shaftId}:${level}`;
+  return `${shaftId}:v2:${level}`;
 }
 
 /** Streak as it should be displayed today (broken if yesterday was skipped). */

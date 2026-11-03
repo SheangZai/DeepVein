@@ -58,6 +58,12 @@ export function TntBoard({
   spectating?: boolean;
 }) {
   const [text, setText] = useState('');
+  // Fit the table into the space left above the keyboard.
+  const [viewportH, setViewportH] = useState(0);
+  const [topH, setTopH] = useState(0);
+  // Short viewport (keyboard open): drop the HUD row and slim the banner.
+  const short = viewportH > 0 && viewportH < 560;
+  const arenaMax = viewportH && topH ? viewportH - topH - S.md * 3 : undefined;
   const now = useTicker(state.phase === 'playing');
   const holder = state.players.find((p) => p.id === state.turn);
   const playing = state.phase === 'playing';
@@ -101,6 +107,7 @@ export function TntBoard({
 
   return (
     <TntScreen
+      onViewportHeight={setViewportH}
       footer={
         <View style={styles.bar}>
           <View style={styles.barRow}>
@@ -133,14 +140,25 @@ export function TntBoard({
           <FuseBar fraction={fraction} />
         </View>
       }>
-      <HudRow
-        left={<HudBox label={roomLabel} value={roomValue} />}
-        middle={`ROUND ${Math.max(1, state.seenPrompts.length)}`}
-        right={<HudBox label="STANDING" value={`${standing}/${state.players.length}`} color={C.danger} />}
+      <View style={styles.top} onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
+        {!short && (
+          <HudRow
+            left={<HudBox label={roomLabel} value={roomValue} />}
+            middle={`ROUND ${Math.max(1, state.seenPrompts.length)}`}
+            right={<HudBox label="STANDING" value={`${standing}/${state.players.length}`} color={C.danger} />}
+          />
+        )}
+        <CategoryBanner state={state} compact={short} />
+        {notice && <Text style={styles.notice}>{notice}</Text>}
+      </View>
+      <Arena
+        state={state}
+        focusId={myId ?? state.players[0]?.id ?? null}
+        bubbles={feed.bubbles}
+        fraction={fraction}
+        secondsLeft={Math.ceil(remaining / 1000)}
+        maxHeight={arenaMax}
       />
-      <CategoryBanner state={state} />
-      {notice && <Text style={styles.notice}>{notice}</Text>}
-      <Arena state={state} focusId={myId ?? state.players[0]?.id ?? null} bubbles={feed.bubbles} fraction={fraction} secondsLeft={Math.ceil(remaining / 1000)} />
       <Text style={[styles.status, (myTurn || boomed) && { color: C.fuse }, retry && { color: C.danger }]}>
         {status ? `▸ ${status}` : ' '}
       </Text>
@@ -161,6 +179,7 @@ export function TntBoard({
 }
 
 const styles = StyleSheet.create({
+  top: { gap: S.md },
   bar: { gap: S.sm, maxWidth: 640, width: '100%', alignSelf: 'center' },
   barRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   input: { flex: 1, minWidth: 0, fontSize: 18, paddingVertical: S.sm + 4 },

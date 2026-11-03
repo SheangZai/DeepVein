@@ -36,7 +36,16 @@ import { Strata } from './strata';
 // ---------- Layout shells ----------
 
 /** Full-screen TNT layout: scrolling table area plus an optional pinned footer. */
-export function TntScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+export function TntScreen({
+  children,
+  footer,
+  onViewportHeight,
+}: {
+  children: ReactNode;
+  footer?: ReactNode;
+  /** Height of the visible table area (shrinks while the keyboard is open). */
+  onViewportHeight?: (height: number) => void;
+}) {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <Strata dim={0.45} />
@@ -44,7 +53,10 @@ export function TntScreen({ children, footer }: { children: ReactNode; footer?: 
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          onLayout={onViewportHeight && ((e: LayoutChangeEvent) => onViewportHeight(e.nativeEvent.layout.height))}>
           {children}
         </ScrollView>
         {footer && <View style={styles.footer}>{footer}</View>}
@@ -105,13 +117,13 @@ export function HudRow({ left, middle, right }: { left: ReactNode; middle: strin
   );
 }
 
-export function CategoryBanner({ state }: { state: TntState }) {
+export function CategoryBanner({ state, compact }: { state: TntState; compact?: boolean }) {
   const prompt = state.promptId ? getPrompt(state.promptId) : null;
   return (
-    <View style={styles.banner}>
+    <View style={[styles.banner, compact && styles.bannerCompact]}>
       <Text style={styles.bannerLabel}>CATEGORY {Math.max(1, state.seenPrompts.length)}</Text>
-      <Text style={styles.bannerText}>{prompt?.text ?? '…'}</Text>
-      <Text style={styles.bannerHint}>▼ any new answer passes the TNT ▼</Text>
+      <Text style={[styles.bannerText, compact && styles.bannerTextCompact]}>{prompt?.text ?? '…'}</Text>
+      {!compact && <Text style={styles.bannerHint}>▼ any new answer passes the TNT ▼</Text>}
     </View>
   );
 }
@@ -292,6 +304,7 @@ export function Arena({
   fraction = 1,
   secondsLeft,
   openSeats = 0,
+  maxHeight,
   onPressPlayer,
 }: {
   state: TntState;
@@ -304,23 +317,42 @@ export function Arena({
   secondsLeft?: number;
   /** Empty ledges to draw (lobby). */
   openSeats?: number;
+  /** Shrink the table to fit, so your own seat stays on screen above the keyboard. */
+  maxHeight?: number;
   /** Tap another signed-in player (report / block). */
   onPressPlayer?: (p: TntPlayer) => void;
 }) {
   const [width, setWidth] = useState(0);
   const players = state.players;
   const total = Math.max(1, players.length + openSeats);
-  const height = Math.max(300, Math.min(460, width * 1.08));
-  const seatW = total <= 4 ? 100 : total <= 6 ? 88 : 76;
+  // Compact when the keyboard leaves little room: smaller seats, tighter circle.
+  const compact = maxHeight !== undefined && maxHeight < 330;
+  const height = compact
+    ? Math.max(210, maxHeight)
+    : Math.max(300, Math.min(460, width * 1.08, maxHeight ?? Infinity));
+  const seatW = (total <= 4 ? 100 : total <= 6 ? 88 : 76) * (compact ? 0.78 : 1);
   const cx = width / 2;
   const cy = height / 2 - 6;
   const rx = Math.max(0, width / 2 - seatW / 2 - 2);
-  const ry = Math.max(0, height / 2 - 66);
+  const ry = Math.max(0, height / 2 - (compact ? 44 : 66));
   const focus = Math.max(0, players.findIndex((p) => p.id === focusId));
+  // A squashed table of 5+ has no room for every bubble: keep yours and the latest.
+  const crowded = compact && total >= 5;
+  const lastId = state.lastEvent?.playerId;
+  const bubbleFor = (id: string) => {
+    const b = bubbles[id];
+    if (!b || (crowded && id !== focusId && id !== lastId)) return undefined;
+    // Once the TNT is back with a miner, their last good answer is old news.
+    return playing && state.turn === id && b.ok ? undefined : b;
+  };
+  // Two miners in a squashed circle would stack; set them on a diagonal instead.
+  const tilt = compact && total === 2 ? Math.PI / 3.2 : 0;
 
   const seatPos = (i: number) => {
-    const a = Math.PI / 2 + ((i - focus) * 2 * Math.PI) / total;
-    return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
+    const a = Math.PI / 2 + tilt + ((i - focus) * 2 * Math.PI) / total;
+    // Answers show above the miner, except near the top of the circle where
+    // they'd run into the category banner.
+    return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), bubbleBelow: Math.sin(a) < -0.7 };
   };
 
   const playing = state.phase === 'playing';
@@ -341,7 +373,13 @@ export function Arena({
             const pos = seatPos(i);
             const p = players[i];
             return (
-              <View key={p?.id ?? `open${i}`} style={[styles.seat, { width: seatW, left: pos.x - seatW / 2, top: pos.y - seatW * 0.42 }]}>
+              <View
+                key={p?.id ?? `open${i}`}
+                style={[
+                  styles.seat,
+                  { width: seatW, left: pos.x - seatW / 2, top: pos.y - seatW * 0.42 },
+                  p && bubbleFor(p.id) && styles.seatOnTop,
+                ]}>
                 {p ? (
                   <Pressable
                     disabled={!onPressPlayer || !p.uid || p.id === focusId}
@@ -355,7 +393,8 @@ export function Arena({
                     boomed={boomId === p.id}
                     winner={state.phase === 'over' && state.winner === p.id}
                     me={p.id === focusId}
-                    bubble={bubbles[p.id]}
+                    bubble={bubbleFor(p.id)}
+                    bubbleBelow={pos.bubbleBelow}
                     showHearts={state.phase !== 'lobby'}
                   />
                   </Pressable>
@@ -480,6 +519,7 @@ function Seat({
   winner,
   me,
   bubble,
+  bubbleBelow,
   showHearts,
 }: {
   player: TntPlayer;
@@ -489,6 +529,7 @@ function Seat({
   winner: boolean;
   me: boolean;
   bubble?: Bubble;
+  bubbleBelow: boolean;
   showHearts: boolean;
 }) {
   const dead = !player.alive;
@@ -517,14 +558,18 @@ function Seat({
         </View>
       )}
       {bubble && (
-        <Animated.View
-          key={bubble.text}
-          entering={ZoomIn.duration(180)}
-          style={[styles.bubble, { maxWidth: width * 1.6 }, bubble.ok ? styles.bubbleOk : styles.bubbleBad]}>
-          <Text numberOfLines={1} style={[styles.bubbleText, !bubble.ok && styles.bubbleTextBad]}>
-            {bubble.text}
-          </Text>
-        </Animated.View>
+        <View
+          pointerEvents="none"
+          style={[styles.bubbleSlot, bubbleBelow ? styles.bubbleSlotBelow : [styles.bubbleSlotAbove, { left: -width * 0.3, right: -width * 0.3 }]]}>
+          <Animated.View
+            key={bubble.text}
+            entering={ZoomIn.duration(180)}
+            style={[styles.bubble, { maxWidth: width * 1.6 }, bubble.ok ? styles.bubbleOk : styles.bubbleBad]}>
+            <Text numberOfLines={1} style={[styles.bubbleText, !bubble.ok && styles.bubbleTextBad]}>
+              {bubble.text}
+            </Text>
+          </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -592,6 +637,8 @@ const styles = StyleSheet.create({
     paddingVertical: S.md,
     gap: 4,
   },
+  bannerCompact: { paddingVertical: S.sm, gap: 2 },
+  bannerTextCompact: { fontSize: 18, lineHeight: 23 },
   bannerLabel: { color: C.fuse, fontFamily: F.bold, fontSize: 11, letterSpacing: 3.5 },
   bannerText: { color: C.text, fontFamily: F.heavy, fontSize: 22, lineHeight: 28 },
   bannerHint: { color: C.muted, fontFamily: F.medium, fontSize: 11, letterSpacing: 1.5, textAlign: 'center', marginTop: 2 },
@@ -612,8 +659,11 @@ const styles = StyleSheet.create({
   name: { color: C.text, fontFamily: F.bold, fontSize: 12, letterSpacing: 0.5, maxWidth: '100%', marginTop: -2 },
   nameMe: { textDecorationLine: 'underline' },
   hearts: { flexDirection: 'row', gap: 2, marginTop: 2 },
+  seatOnTop: { zIndex: 2 },
+  bubbleSlot: { alignItems: 'center' },
+  bubbleSlotBelow: { marginTop: 4 },
+  bubbleSlotAbove: { position: 'absolute', bottom: '100%', marginBottom: 2 },
   bubble: {
-    marginTop: 4,
     borderRadius: R.sm,
     borderWidth: 1,
     paddingHorizontal: 8,

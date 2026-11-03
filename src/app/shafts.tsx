@@ -28,13 +28,14 @@ export default function Shafts() {
               </View>
             </Row>
             <View style={styles.levels}>
-              {Array.from({ length: shaft.levels }, (_, i) => i + 1).map((level) => {
+              {shaft.levels.map((stage, i) => {
+                const level = i + 1;
                 const r = progress.shafts[shaftKey(shaft.id, level)];
                 const best = r?.answers.reduce<TierId>((b, a) => (a.points > TIERS[b].points ? a.tier : b), 'miss');
                 return (
                   <Pressable
                     key={level}
-                    accessibilityLabel={`Level ${level}`}
+                    accessibilityLabel={`Level ${level}: ${stage.name}`}
                     onPress={() =>
                       router.push({ pathname: '/dig', params: { mode: 'shaft', shaft: shaft.id, level: String(level) } })
                     }

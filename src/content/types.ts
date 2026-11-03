@@ -17,6 +17,8 @@ export interface PromptSource {
   emerald?: string[];
   ruby?: string[];
   diamond: string;
+  /** First daily dig that may use this prompt; earlier digs keep their old questions. */
+  since?: number;
 }
 
 export interface AnswerEntry {
@@ -30,6 +32,7 @@ export interface Prompt {
   id: string;
   category: CategoryId;
   text: string;
+  since: number;
   entries: AnswerEntry[];
   gem: AnswerEntry;
   keys: Map<string, number>;

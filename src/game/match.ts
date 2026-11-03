@@ -13,6 +13,8 @@ export function normalizeWords(input: string): string {
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/&/g, ' and ')
+    .replace(/\+/g, ' plus ')
+    .replace(/#/g, ' sharp ')
     .replace(/['’‘`´]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()

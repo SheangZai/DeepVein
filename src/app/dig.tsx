@@ -14,7 +14,7 @@ import { ResultsView } from '@/components/results-view';
 import { Strata } from '@/components/strata';
 import { Body, Button, Card, Center, Heading, IconBadge, Input, Label, Muted, Row, Screen } from '@/components/ui';
 import { CATEGORY_LABELS } from '@/content';
-import { getShaft, shaftLevelPrompts } from '@/content/shafts';
+import { getShaft, getShaftLevel } from '@/content/shafts';
 import { useDig } from '@/hooks/use-dig';
 import { currentDigNo, digDateLabel, endlessDailyPrompts, endlessRandomPrompts } from '@/game/schedule';
 import { depthFor, DIG_LIVES, SECONDS_PER_PROMPT, SHAFT_DEPTH, zoneFor } from '@/game/tiers';
@@ -79,7 +79,8 @@ function makePlan(params: Record<string, string | undefined>): Plan {
   if (mode === 'shaft') {
     const shaft = getShaft(params.shaft ?? '');
     const level = Number(params.level) || 1;
-    if (!shaft) {
+    const stage = shaft && getShaftLevel(shaft, level);
+    if (!shaft || !stage) {
       return { mode, label: '', title: 'Shaft', promptIds: [], endless: false, locked: 'Unknown shaft.', existing: null };
     }
     return {
@@ -87,8 +88,8 @@ function makePlan(params: Record<string, string | undefined>): Plan {
       shaftId: shaft.id,
       level,
       label: `Deepvein ${shaft.title} L${level}`,
-      title: `${shaft.emoji} ${shaft.title} · Level ${level}`,
-      promptIds: shaftLevelPrompts(shaft, level),
+      title: `${shaft.emoji} Level ${level}: ${stage.name}`,
+      promptIds: stage.prompts,
       endless: false,
       locked: null,
       existing: p.shafts[shaftKey(shaft.id, level)] ?? null,

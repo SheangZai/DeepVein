@@ -37,7 +37,7 @@ export function buildPrompt(src: PromptSource, issues: BuildIssue[] = []): Promp
   }
 
   const gem = entries.find((e) => e.tier === 'diamond')!;
-  return { id: src.id, category: src.category, text: src.text, entries, gem, keys, signatures };
+  return { id: src.id, category: src.category, text: src.text, since: src.since ?? 1, entries, gem, keys, signatures };
 }
 
 export function matchAnswer(prompt: Prompt, input: string): AnswerEntry | null {

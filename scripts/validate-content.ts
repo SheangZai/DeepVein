@@ -36,6 +36,7 @@ const EXPECTED_COUNTS: Record<string, number> = {
   'ancient-wonders': 7,
   'deadly-sins': 7,
   zodiac: 13,
+  'malaysian-states': 16,
 };
 
 // [promptId, input, expected canonical name or null]
@@ -114,12 +115,24 @@ const MATCH_CASES: [string, string, string | null][] = [
   ['ballon-dor', 'ronaldo', 'Cristiano Ronaldo'],
   ['car-brands', 'merc', 'Mercedes-Benz'],
   ['sea-capitals', 'naypyitaw', 'Naypyidaw'],
+  ['programming-languages', 'c++', 'C++'],
+  ['programming-languages', 'c#', 'C#'],
+  ['programming-languages', 'c', 'C'],
+  ['programming-languages', 'f#', 'F#'],
+  ['malaysian-states', 'melaka', 'Malacca'],
+  ['asia-capitals', 'colombo', 'Colombo'],
+  ['kuih', 'onde onde', 'Ondeh-ondeh'],
+  ['footballers', 'ronaldo', 'Cristiano Ronaldo'],
+  ['athletics-events', '100m', '100 metres'],
+  ['athletics-events', '200m', '200 metres'],
 ];
 
 async function main() {
   const { PROMPTS, BUILD_ISSUES } = await import('../src/content/index');
   const { matchAnswer } = await import('../src/content/build');
-  const { promptsForDig } = await import('../src/game/schedule');
+  const { promptsForDig, endlessDailyPrompts } = await import('../src/game/schedule');
+  const { SHAFTS } = await import('../src/content/shafts');
+  const { DAILY_V2_DIG } = await import('../src/content/added');
   let failures = 0;
   const fail = (msg: string) => {
     failures++;
@@ -154,6 +167,28 @@ async function main() {
   for (let dig = 1; dig <= 400; dig++) {
     const list = promptsForDig(dig);
     if (list.length !== 7 || new Set(list).size !== 7) fail(`dig ${dig} has bad prompt list`);
+  }
+
+  // Every prompt of a shaft's category sits in exactly one level of that shaft.
+  for (const shaft of SHAFTS) {
+    const seen = new Set<string>();
+    shaft.levels.forEach((level, i) => {
+      if (level.prompts.length !== 5) fail(`${shaft.id} level ${i + 1} has ${level.prompts.length} prompts`);
+      for (const id of level.prompts) {
+        const p = PROMPTS.find((q) => q.id === id);
+        if (!p) fail(`${shaft.id} level ${i + 1}: unknown prompt ${id}`);
+        else if (p.category !== shaft.category) fail(`${shaft.id}: ${id} is in category ${p.category}`);
+        if (seen.has(id)) fail(`${shaft.id}: ${id} appears twice`);
+        seen.add(id);
+      }
+    });
+    for (const p of PROMPTS) if (p.category === shaft.category && !seen.has(p.id)) fail(`${shaft.id}: ${p.id} is in no level`);
+  }
+
+  // Daily digs before the new prompts arrive must never use them.
+  const late = new Set(PROMPTS.filter((p) => p.since > 1).map((p) => p.id));
+  for (let dig = 1; dig < DAILY_V2_DIG; dig++) {
+    if (endlessDailyPrompts(dig).slice(0, 200).some((id) => late.has(id))) fail(`dig ${dig} uses a prompt added later`);
   }
 
   const total = PROMPTS.reduce((n, p) => n + p.entries.length, 0);

@@ -41,8 +41,15 @@ function sequenceAt(i: number, ids: string[]) {
   return perm[i % ids.length];
 }
 
+/** Prompts the daily dig may use on a given day, so adding prompts never changes past digs. */
+function dailyPool(digNo: number) {
+  return PROMPTS.filter((p) => p.since <= digNo)
+    .map((p) => p.id)
+    .sort();
+}
+
 export function promptsForDig(digNo: number): string[] {
-  const ids = PROMPTS.map((p) => p.id).sort();
+  const ids = dailyPool(digNo);
   const picked: string[] = [];
   for (let i = (digNo - 1) * PROMPTS_PER_DIG; picked.length < PROMPTS_PER_DIG; i++) {
     const id = sequenceAt(i, ids);
@@ -55,8 +62,7 @@ export function promptsForDig(digNo: number): string[] {
 const ENDLESS_CYCLES = 5;
 
 /** Repeats a pool as back-to-back shuffles, never the same prompt twice in a row. */
-function endlessFrom(first: string[], rand: () => number): string[] {
-  const all = PROMPTS.map((p) => p.id).sort();
+function endlessFrom(first: string[], rand: () => number, all = PROMPTS.map((p) => p.id).sort()): string[] {
   const out = [...first];
   let pool = all.filter((id) => !first.includes(id));
   for (let c = 0; c < ENDLESS_CYCLES; c++) {
@@ -70,7 +76,7 @@ function endlessFrom(first: string[], rand: () => number): string[] {
 
 /** The daily dig: today's seeded opening, then the rest of the pool in a seeded order. */
 export function endlessDailyPrompts(digNo: number): string[] {
-  return endlessFrom(promptsForDig(digNo), mulberry32(hashString(`endless:${digNo}`)));
+  return endlessFrom(promptsForDig(digNo), mulberry32(hashString(`endless:${digNo}`)), dailyPool(digNo));
 }
 
 export function endlessRandomPrompts(exclude: string[] = []): string[] {
