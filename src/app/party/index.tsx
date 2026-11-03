@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { Icon, type IconName } from '@/components/icons';
 import { usePlayerSheet } from '@/components/player-sheet';
 import { Panel, TntScreen } from '@/components/tnt-arena';
+import { OnlinePill } from '@/components/online-pill';
 import { TntTitle } from '@/components/tnt-lobby';
 import { Input, Row } from '@/components/ui';
 import { MAX_PLAYERS } from '@/game/tnt';
@@ -36,6 +37,7 @@ export default function PartyHome() {
   return (
     <TntScreen>
       <TntTitle />
+      <OnlinePill center />
       <Text style={styles.intro}>
         Name an answer that fits the category to pass the lit TNT. Wrong? Keep trying until the fuse runs out.
         No repeats, and the fuse gets shorter every pass. Last miner standing wins.

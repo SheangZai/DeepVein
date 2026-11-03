@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Gem } from '@/components/gem';
 import { InviteBanner, shareInvite } from '@/components/invite-banner';
+import { OnlinePill } from '@/components/online-pill';
 import { Icon, type IconName } from '@/components/icons';
 import { Strata } from '@/components/strata';
 import { Button, Card, IconBadge, Label, Row } from '@/components/ui';
@@ -105,6 +106,7 @@ export default function Home() {
             <Icon name="tnt" size={22} color={C.danger} />
           </Row>
           <Text style={styles.heroTitle}>Pass the TNT before it blows</Text>
+          <OnlinePill />
           <Row style={styles.meta}>
             <MetaPill icon="user" text={`${MIN_PLAYERS}–${MAX_PLAYERS} miners`} />
             <MetaPill icon="heart" text={`${START_HEARTS} hearts`} />

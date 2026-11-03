@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 
 import { WebFrame } from '@/components/web-frame';
 import { startMusic } from '@/lib/music';
+import { startPresence } from '@/lib/online';
 import { C, F } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -42,6 +43,9 @@ export default function RootLayout() {
   useEffect(() => {
     startMusic();
   }, []);
+
+  // Counts this device in "miners online" while the app is open.
+  useEffect(() => startPresence(), []);
 
   if (!ready) return null;
 
