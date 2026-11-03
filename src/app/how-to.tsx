@@ -3,7 +3,7 @@ import { StyleSheet, Text } from 'react-native';
 import { Body, Card, Heading, Muted, Row, Screen, TierChip } from '@/components/ui';
 import { RESET_UTC_OFFSET_HOURS } from '@/game/schedule';
 import { START_FUSE_MS, MIN_FUSE_MS } from '@/game/tnt';
-import { ANSWER_TIERS, BUDDIES, DIG_LIVES, METERS_PER_POINT, SECONDS_PER_PROMPT, TIERS } from '@/game/tiers';
+import { ANSWER_TIERS, BUDDIES, DIG_LIVES, METERS_PER_POINT, SECONDS_PER_PROMPT, TIERS, type BuddyInfo } from '@/game/tiers';
 import { C, F, S } from '@/theme';
 
 export default function HowTo() {
@@ -44,13 +44,13 @@ export default function HowTo() {
       </Card>
 
       <Card>
-        <Heading>Streak buddies</Heading>
-        <Body>Dig every day to unlock new companions:</Body>
+        <Heading>Buddies</Heading>
+        <Body>Unlock companions with daily streaks, by digging ores, or by luck:</Body>
         {BUDDIES.map((b) => (
           <Row key={b.id} style={styles.buddyRow}>
             <Text style={styles.buddyEmoji}>{b.emoji}</Text>
             <Text style={styles.buddy}>
-              {b.name} <Text style={styles.buddyNote}>{b.streak > 0 ? `· ${b.streak}-day streak` : '· everyone starts here'}</Text>
+              {b.name} <Text style={styles.buddyNote}>· {buddyRule(b)}</Text>
             </Text>
           </Row>
         ))}
@@ -67,6 +67,14 @@ export default function HowTo() {
       </Card>
     </Screen>
   );
+}
+
+function buddyRule(b: BuddyInfo) {
+  const u = b.unlock;
+  if (u.kind === 'streak') return u.days > 0 ? `${u.days}-day streak` : 'everyone starts here';
+  if (u.kind === 'ores') return `dig ${u.count} ores`;
+  if (u.kind === 'rare') return `dig ${u.count} Emeralds or better`;
+  return 'a lucky find while digging';
 }
 
 const styles = StyleSheet.create({

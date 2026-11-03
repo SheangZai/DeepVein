@@ -10,7 +10,17 @@ import { Body, Button, Card, Heading, Input, Label, Muted, Row, Screen } from '@
 import { BUDDIES, depthFor } from '@/game/tiers';
 import { BLOCKED_NAME, syncBlocks, unblockPlayer, useBlocked } from '@/lib/moderation';
 import { cleanName, isOffensive } from '@/lib/names';
-import { liveStreak, progressStore, setBuddy, setPlayerName } from '@/lib/progress';
+import {
+  buddyFor,
+  isUnlocked,
+  liveStreak,
+  oreTotals,
+  progressStore,
+  setBuddy,
+  setPlayerName,
+  unlockedBuddies,
+  unlockHint,
+} from '@/lib/progress';
 import { addFriend, deleteAccount, getProfile, updateDisplayName, type Profile } from '@/lib/social';
 import { useStore } from '@/lib/storage';
 import { backendConfigured } from '@/lib/supabase';
@@ -29,14 +39,17 @@ export default function ProfileScreen() {
         <Stat icon={<Gem tier="diamond" size={18} />} value={`${progress.gems}`} label="Gems found" />
         <Stat icon={<Icon name="pickaxe" size={18} color={C.muted} />} value={`${progress.digsPlayed}`} label="Digs played" />
         <Stat icon={<Icon name="calendar" size={18} color={C.muted} />} value={`${Object.keys(progress.daily).length}`} label="Dailies played" />
+        <Stat icon={<Gem tier="copper" size={18} />} value={`${oreTotals(progress).ores}`} label="Ores dug" />
+        <Stat icon={<Gem tier="emerald" size={18} />} value={`${oreTotals(progress).rare}`} label="Emeralds or better" />
+        <Stat icon={<Text style={styles.statEmoji}>{buddyFor(progress).emoji}</Text>} value={`${unlockedBuddies(progress).length}/${BUDDIES.length}`} label="Buddies" />
       </View>
 
       <Card>
         <Label>Buddies</Label>
-        <Muted>Unlocked by your longest daily streak. Tap to bring one along.</Muted>
+        <Muted>Earn buddies with daily streaks, by digging ores, or by pure luck. Tap one to bring it along.</Muted>
         <View style={styles.buddies}>
           {BUDDIES.map((b) => {
-            const unlocked = progress.longestStreak >= b.streak;
+            const unlocked = isUnlocked(progress, b);
             const selected = progress.buddy === b.id;
             return (
               <Pressable
@@ -48,7 +61,7 @@ export default function ProfileScreen() {
                   {unlocked ? <Text style={styles.buddyEmoji}>{b.emoji}</Text> : <Icon name="lock" size={20} color={C.faint} />}
                 </View>
                 <Text style={styles.buddyName}>{b.name}</Text>
-                {!unlocked && <Muted style={styles.small}>{b.streak}-day streak</Muted>}
+                {!unlocked && <Muted style={styles.small}>{unlockHint(progress, b)}</Muted>}
               </Pressable>
             );
           })}
@@ -245,6 +258,7 @@ function BlockedList() {
 const styles = StyleSheet.create({
   blockedRow: { alignItems: 'center' },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
+  statEmoji: { fontSize: 16, lineHeight: 20 },
   stat: {
     flexBasis: '31%',
     flexGrow: 1,

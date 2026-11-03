@@ -11,7 +11,7 @@ import { MAX_PLAYERS } from '@/game/tnt';
 import { BUDDIES } from '@/game/tiers';
 import { bestOpenRoom, newRoomCode, usePublicRooms } from '@/hooks/use-online-room';
 import { cleanName } from '@/lib/names';
-import { progressStore, setBuddy, setPlayerName } from '@/lib/progress';
+import { isUnlocked, progressStore, setBuddy, setPlayerName, unlockHint } from '@/lib/progress';
 import { shownName, syncBlocks, useBlocked } from '@/lib/moderation';
 import { getRanked, type RankedEntry } from '@/lib/social';
 import { useStore } from '@/lib/storage';
@@ -52,7 +52,7 @@ export default function PartyHome() {
         />
         <View style={styles.buddies}>
           {BUDDIES.map((b) => {
-            const unlocked = progress.longestStreak >= b.streak;
+            const unlocked = isUnlocked(progress, b);
             const selected = progress.buddy === b.id;
             return (
               <Pressable
@@ -60,14 +60,14 @@ export default function PartyHome() {
                 disabled={!unlocked}
                 accessibilityRole="button"
                 accessibilityState={{ selected, disabled: !unlocked }}
-                accessibilityLabel={unlocked ? b.name : `${b.name}, unlocks at a ${b.streak}-day streak`}
+                accessibilityLabel={unlocked ? b.name : `${b.name}, locked: ${unlockHint(progress, b)}`}
                 onPress={() => setBuddy(b.id)}
                 style={[styles.buddy, selected && styles.buddySelected]}>
                 <Text style={[styles.buddyEmoji, !unlocked && styles.buddyLocked]}>{b.emoji}</Text>
                 <Text numberOfLines={1} style={[styles.buddyName, selected && { color: C.accent }]}>
                   {b.name.split(' ').pop()!.toUpperCase()}
                 </Text>
-                {!unlocked && <Text style={styles.buddyReq}>{b.streak}-day</Text>}
+                {!unlocked && <Text style={styles.buddyReq}>{unlockHint(progress, b, { short: true })}</Text>}
               </Pressable>
             );
           })}
@@ -240,9 +240,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   intro: { color: C.text, opacity: 0.85, fontFamily: F.regular, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   fieldLabel: { color: C.muted, fontFamily: F.bold, fontSize: 10, letterSpacing: 2.5 },
-  buddies: { flexDirection: 'row', gap: 6 },
+  buddies: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
   buddy: {
-    flex: 1,
+    flexBasis: '18%',
     alignItems: 'center',
     paddingVertical: S.sm,
     borderRadius: R.sm,

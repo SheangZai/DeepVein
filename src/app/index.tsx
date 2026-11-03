@@ -116,7 +116,7 @@ export default function Home() {
             onPress={() => router.push({ pathname: '/dig', params: { mode: 'unlimited' } })}
           />
           <Tile icon="calendar" color="#b59cff" title="Archive" sub="Past daily digs" onPress={() => router.push('/archive')} />
-          <Tile icon="layers" color={C.good} title="Shafts" sub="Themed packs" onPress={() => router.push('/shafts')} />
+          <Tile icon="layers" color={C.good} title="Topics" sub="Pick a subject" onPress={() => router.push('/shafts')} />
         </View>
 
         <Row style={styles.footer}>

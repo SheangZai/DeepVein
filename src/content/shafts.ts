@@ -6,7 +6,7 @@ export interface ShaftLevel {
   prompts: string[];
 }
 
-/** Themed packs of prompts, played level by level. */
+/** Topics (called shafts in code): themed packs of prompts, played level by level. */
 export interface Shaft {
   id: string;
   category: CategoryId;
@@ -20,7 +20,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'geography',
     category: 'geography',
-    title: 'Atlas Shaft',
+    title: 'Geography',
     emoji: '🗺️',
     blurb: 'Countries, capitals, islands, seas and the places nobody remembers.',
     levels: [
@@ -33,7 +33,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'science',
     category: 'science',
-    title: 'Lab Shaft',
+    title: 'Science',
     emoji: '🧪',
     blurb: 'Bodies, rocks, gems, stars and the people who figured it all out.',
     levels: [
@@ -46,7 +46,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'sports',
     category: 'sports',
-    title: 'Stadium Shaft',
+    title: 'Sports',
     emoji: '🏟️',
     blurb: 'Footballers, shuttlers, champions, board games and esports.',
     levels: [
@@ -59,7 +59,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'screen',
     category: 'screen',
-    title: 'Cinema Shaft',
+    title: 'Screen & Music',
     emoji: '🎬',
     blurb: 'Cartoons, anime, K-pop, Netflix and the big screen.',
     levels: [
@@ -72,7 +72,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'food',
     category: 'food',
-    title: 'Kitchen Shaft',
+    title: 'Food',
     emoji: '🍜',
     blurb: 'Hawker favourites, kuih, spices, sauces and food from all over Asia.',
     levels: [
@@ -85,7 +85,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'nature',
     category: 'nature',
-    title: 'Jungle Shaft',
+    title: 'Nature',
     emoji: '🌿',
     blurb: 'Pets, rainforest creatures, whales, raptors and wild places.',
     levels: [
@@ -98,7 +98,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'words',
     category: 'words',
-    title: 'Archive Shaft',
+    title: 'Culture & History',
     emoji: '📜',
     blurb: 'Brands, legends, empires, landmarks and alphabet soup.',
     levels: [
@@ -111,7 +111,7 @@ export const SHAFTS: Shaft[] = [
   {
     id: 'everyday',
     category: 'everyday',
-    title: 'Everyday Shaft',
+    title: 'Everyday',
     emoji: '🧺',
     blurb: 'Makeup, maths, jobs, snacks and everything around the house.',
     levels: [

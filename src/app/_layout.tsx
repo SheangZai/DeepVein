@@ -60,7 +60,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
           <Stack.Screen name="dig" options={{ title: 'Dig', gestureEnabled: false }} />
           <Stack.Screen name="archive" options={{ title: 'Archive' }} />
-          <Stack.Screen name="shafts" options={{ title: 'Shafts' }} />
+          <Stack.Screen name="shafts" options={{ title: 'Topics' }} />
           <Stack.Screen name="profile" options={{ title: 'Miner' }} />
           <Stack.Screen name="how-to" options={{ title: 'How to dig', presentation: 'modal' }} />
           <Stack.Screen name="party/index" options={{ title: 'TNT Toss' }} />

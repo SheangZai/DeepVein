@@ -58,6 +58,21 @@ const TNT_SKIP = new Set([
   'nato-alphabet',
   'shakespeare',
   'us-presidents',
+  // November 2026 prompts that are too narrow for a full table.
+  'tennis-champions',
+  'badminton-players',
+  'nba-players',
+  'athletics-events',
+  'muscles',
+  'programming-languages',
+  'units',
+  'asia-capitals',
+  'indonesian-islands',
+  'deserts',
+  'painters',
+  'empires',
+  'birds-of-prey',
+  'whales-dolphins',
 ]);
 
 /** Broad categories with enough answers that a full table can keep passing. */

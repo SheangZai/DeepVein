@@ -1,5 +1,14 @@
 import { currentDigNo } from '@/game/schedule';
-import { BUDDIES, TIERS, type BuddyId, type TierId } from '@/game/tiers';
+import {
+  BUDDIES,
+  LUCK_BASE_CHANCE,
+  LUCK_MIN_ANSWERS,
+  LUCK_STEP_CHANCE,
+  TIERS,
+  type BuddyId,
+  type BuddyInfo,
+  type TierId,
+} from '@/game/tiers';
 
 import { cleanName } from './names';
 import { createStore } from './storage';
@@ -39,6 +48,14 @@ interface Progress {
   recentUnlimited: string[];
   buddy: BuddyId;
   playerName: string;
+  /** Lifetime ores (non-miss answers). Missing on older saves: counted from stored digs. */
+  ores?: number;
+  /** Lifetime Emerald-or-better answers, same backfill rule. */
+  rareOres?: number;
+  /** Buddies found by luck. */
+  found?: BuddyId[];
+  /** Finished digs since the last luck roll came up empty, raising the odds. */
+  dryDigs?: number;
 }
 
 const INITIAL: Progress = {
@@ -75,14 +92,77 @@ export function unlimitedUsedToday(p: Progress, now = Date.now()) {
   return p.unlimitedDay === currentDigNo(now) ? p.unlimitedToday : 0;
 }
 
-export function recordResult(result: DigResult) {
+const RARE: TierId[] = ['emerald', 'ruby', 'diamond'];
+
+function countOres(answers: AnswerRecord[]) {
+  return {
+    ores: answers.filter((a) => a.tier !== 'miss').length,
+    rare: answers.filter((a) => RARE.includes(a.tier)).length,
+  };
+}
+
+/** Lifetime ore totals; older saves start from the digs they still have stored. */
+export function oreTotals(p: Progress) {
+  if (p.ores !== undefined && p.rareOres !== undefined) return { ores: p.ores, rare: p.rareOres };
+  let ores = 0;
+  let rare = 0;
+  for (const r of [...Object.values(p.daily), ...Object.values(p.archive), ...Object.values(p.shafts)]) {
+    const c = countOres(r.answers);
+    ores += c.ores;
+    rare += c.rare;
+  }
+  return { ores: p.ores ?? ores, rare: p.rareOres ?? rare };
+}
+
+export function isUnlocked(p: Progress, b: BuddyInfo) {
+  const u = b.unlock;
+  if (u.kind === 'streak') return p.longestStreak >= u.days;
+  if (u.kind === 'luck') return (p.found ?? []).includes(b.id);
+  const t = oreTotals(p);
+  return (u.kind === 'ores' ? t.ores : t.rare) >= u.count;
+}
+
+/** How to get a buddy, e.g. "14-day streak", "92 / 150 ores". */
+export function unlockHint(p: Progress, b: BuddyInfo, { short = false } = {}) {
+  const u = b.unlock;
+  if (u.kind === 'streak') return short ? `${u.days}-day` : `${u.days}-day streak`;
+  if (u.kind === 'luck') return short ? '???' : 'Found by luck while digging';
+  const t = oreTotals(p);
+  const have = Math.min(u.count, u.kind === 'ores' ? t.ores : t.rare);
+  if (short) return `${have}/${u.count}`;
+  return u.kind === 'ores' ? `${have} / ${u.count} ores` : `${have} / ${u.count} emeralds or better`;
+}
+
+/** Records a finished dig and returns any buddies it unlocked. */
+export type BuddyFoundList = BuddyInfo[];
+
+export function recordResult(result: DigResult): BuddyFoundList {
+  const before = new Set(unlockedBuddies(progressStore.get()).map((b) => b.id));
   progressStore.set((p) => {
     const gems = result.answers.filter((a) => a.tier === 'diamond').length;
+    const totals = oreTotals(p);
+    const dug = countOres(result.answers);
+    const found = p.found ?? [];
+    let dryDigs = p.dryDigs ?? 0;
+    let lucky: BuddyId[] = [];
+    const luckBuddy = BUDDIES.find((b) => b.unlock.kind === 'luck' && !found.includes(b.id));
+    if (luckBuddy && result.answers.length >= LUCK_MIN_ANSWERS) {
+      if (Math.random() < Math.min(1, LUCK_BASE_CHANCE + LUCK_STEP_CHANCE * dryDigs)) {
+        lucky = [luckBuddy.id];
+        dryDigs = 0;
+      } else {
+        dryDigs += 1;
+      }
+    }
     const next: Progress = {
       ...p,
       bestScore: Math.max(p.bestScore, result.score),
       gems: p.gems + gems,
       digsPlayed: p.digsPlayed + 1,
+      ores: totals.ores + dug.ores,
+      rareOres: totals.rare + dug.rare,
+      found: [...found, ...lucky],
+      dryDigs,
     };
     if (result.mode === 'daily' && result.digNo !== undefined) {
       if (p.daily[result.digNo]) return p;
@@ -98,6 +178,7 @@ export function recordResult(result: DigResult) {
     }
     return next;
   });
+  return unlockedBuddies(progressStore.get()).filter((b) => !before.has(b.id));
 }
 
 export function noteUnlimitedStarted(promptIds: string[]) {
@@ -122,7 +203,7 @@ export function setPlayerName(playerName: string) {
 }
 
 export function unlockedBuddies(p: Progress) {
-  return BUDDIES.filter((b) => p.longestStreak >= b.streak);
+  return BUDDIES.filter((b) => isUnlocked(p, b));
 }
 
 export function buddyFor(p: Progress) {

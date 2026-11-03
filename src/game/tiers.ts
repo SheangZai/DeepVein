@@ -102,12 +102,36 @@ export function zoneFor(depth: number) {
   return zone;
 }
 
+/** How a buddy is earned. Ores are answers that aren't misses; rare ores are Emerald or better. */
+export type BuddyUnlock =
+  | { kind: 'streak'; days: number }
+  | { kind: 'ores'; count: number }
+  | { kind: 'rare'; count: number }
+  | { kind: 'luck' };
+
+interface Buddy {
+  id: string;
+  name: string;
+  emoji: string;
+  unlock: BuddyUnlock;
+}
+
 export const BUDDIES = [
-  { id: 'pip', name: 'Pip the Miner', emoji: '👷', streak: 0 },
-  { id: 'canary', name: 'Canary', emoji: '🐤', streak: 5 },
-  { id: 'bat', name: 'Cave Bat', emoji: '🦇', streak: 14 },
-  { id: 'golem', name: 'Stone Golem', emoji: '🗿', streak: 30 },
-  { id: 'dragon', name: 'Core Dragon', emoji: '🐉', streak: 45 },
-] as const;
+  { id: 'pip', name: 'Pip the Miner', emoji: '👷', unlock: { kind: 'streak', days: 0 } },
+  { id: 'canary', name: 'Canary', emoji: '🐤', unlock: { kind: 'streak', days: 5 } },
+  { id: 'bat', name: 'Cave Bat', emoji: '🦇', unlock: { kind: 'streak', days: 14 } },
+  { id: 'golem', name: 'Stone Golem', emoji: '🗿', unlock: { kind: 'streak', days: 30 } },
+  { id: 'dragon', name: 'Core Dragon', emoji: '🐉', unlock: { kind: 'streak', days: 45 } },
+  { id: 'beaver', name: 'Burrow Beaver', emoji: '🦫', unlock: { kind: 'ores', count: 150 } },
+  { id: 'drillbot', name: 'Drill Bot', emoji: '🤖', unlock: { kind: 'ores', count: 750 } },
+  { id: 'scorpion', name: 'Emerald Scorpion', emoji: '🦂', unlock: { kind: 'rare', count: 40 } },
+  { id: 'ghost', name: 'Mine Ghost', emoji: '👻', unlock: { kind: 'luck' } },
+] as const satisfies readonly Buddy[];
 
 export type BuddyId = (typeof BUDDIES)[number]['id'];
+export type BuddyInfo = (typeof BUDDIES)[number];
+
+/** Luck buddy odds per finished dig of 5+ answers; each dry dig adds a little. */
+export const LUCK_MIN_ANSWERS = 5;
+export const LUCK_BASE_CHANCE = 0.025;
+export const LUCK_STEP_CHANCE = 0.0125;

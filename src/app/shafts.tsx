@@ -14,7 +14,7 @@ export default function Shafts() {
 
   return (
     <Screen>
-      <Muted>Themed digs, level by level. Every shaft is open.</Muted>
+      <Muted>Pick a subject and dig through its levels. Every topic is open.</Muted>
       {SHAFTS.map((shaft) => {
         return (
           <Card key={shaft.id}>

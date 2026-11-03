@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, typ
 import Animated, { FadeInDown, useAnimatedStyle, withTiming, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BuddyFound } from '@/components/buddy-found';
 import { DailySocial } from '@/components/daily-social';
 import { DigReveal } from '@/components/dig-reveal';
 import { FuseBar } from '@/components/fuse-bar';
@@ -26,6 +27,7 @@ import {
   scoreOf,
   shaftKey,
   type AnswerRecord,
+  type BuddyFoundList,
   type DigMode,
   type DigResult,
 } from '@/lib/progress';
@@ -81,7 +83,7 @@ function makePlan(params: Record<string, string | undefined>): Plan {
     const level = Number(params.level) || 1;
     const stage = shaft && getShaftLevel(shaft, level);
     if (!shaft || !stage) {
-      return { mode, label: '', title: 'Shaft', promptIds: [], endless: false, locked: 'Unknown shaft.', existing: null };
+      return { mode, label: '', title: 'Topic', promptIds: [], endless: false, locked: 'Unknown topic.', existing: null };
     }
     return {
       mode,
@@ -112,6 +114,7 @@ export default function DigScreen() {
   const progress = useStore(progressStore);
   const [plan] = useState(() => makePlan(params));
   const [result, setResult] = useState<DigResult | null>(plan.existing);
+  const [newBuddies, setNewBuddies] = useState<BuddyFoundList>([]);
   const buddy = buddyFor(progress).emoji;
 
   const onFinish = useCallback(
@@ -125,7 +128,7 @@ export default function DigScreen() {
         score: scoreOf(answers),
         finishedAt: Date.now(),
       };
-      recordResult(r);
+      setNewBuddies(recordResult(r));
       setResult(r);
       maybeAskForReview(r, progressStore.get().digsPlayed);
     },
@@ -151,6 +154,7 @@ export default function DigScreen() {
     return (
       <Screen>
         {header}
+        {newBuddies.length > 0 && <BuddyFound buddies={newBuddies} />}
         <ResultsView
           label={plan.label}
           answers={result.answers}
