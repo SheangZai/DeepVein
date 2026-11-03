@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 import { Gem } from '@/components/gem';
 import { Icon } from '@/components/icons';
+import { shareInvite } from '@/components/invite-banner';
 import { Body, Button, Card, Heading, Input, Label, Muted, Row, Screen } from '@/components/ui';
 import { BUDDIES, depthFor } from '@/game/tiers';
 import { BLOCKED_NAME, syncBlocks, unblockPlayer, useBlocked } from '@/lib/moderation';
@@ -114,6 +115,7 @@ function OnlineAccount() {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -213,6 +215,11 @@ function OnlineAccount() {
           </View>
           <Button label="Copy" icon="copy" variant="secondary" onPress={() => Clipboard.setStringAsync(profile.friend_code)} />
         </Row>
+        <Button
+          label={inviteCopied ? 'Invite link copied' : 'Invite a friend'}
+          icon="share"
+          onPress={async () => setInviteCopied((await shareInvite()) === 'copied')}
+        />
       </Card>
       <Card>
         <Heading>Add a friend</Heading>

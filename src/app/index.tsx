@@ -4,15 +4,18 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Gem } from '@/components/gem';
+import { InviteBanner, shareInvite } from '@/components/invite-banner';
 import { Icon, type IconName } from '@/components/icons';
 import { Strata } from '@/components/strata';
 import { Button, Card, IconBadge, Label, Row } from '@/components/ui';
-import { currentDigNo } from '@/game/schedule';
+import { currentDigNo, currentWeekNo, msUntilNextWeek, weeklyTopic } from '@/game/schedule';
 import { depthFor } from '@/game/tiers';
 import { MAX_PLAYERS, MIN_FUSE_MS, MIN_PLAYERS, START_FUSE_MS, START_HEARTS } from '@/game/tnt';
 import { setSound, settingsStore } from '@/lib/music';
 import { buddyFor, liveStreak, progressStore } from '@/lib/progress';
+import { getDailyCount } from '@/lib/social';
 import { useStore } from '@/lib/storage';
+import { backendConfigured } from '@/lib/supabase';
 import { C, F, R, S } from '@/theme';
 
 function useNow(intervalMs: number) {
@@ -33,6 +36,19 @@ export default function Home() {
   const streak = liveStreak(progress, now);
   const buddy = buddyFor(progress);
   const openDaily = () => router.push({ pathname: '/dig', params: { mode: 'daily' } });
+  const weekNo = currentWeekNo(now);
+  const topic = weeklyTopic(weekNo);
+  const thisWeek = progress.weekly?.[weekNo];
+  const dugToday = useDailyCount(digNo);
+  const [inviteNote, setInviteNote] = useState<string | null>(null);
+  const invite = async () => {
+    try {
+      const how = await shareInvite();
+      setInviteNote(how === 'copied' ? 'Invite link copied. Paste it to a friend!' : null);
+    } catch (e: any) {
+      setInviteNote(e?.message ?? 'Could not make an invite link.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -53,6 +69,8 @@ export default function Home() {
           </View>
           <Text style={styles.tagline}>Dig for the answers nobody else finds.</Text>
         </View>
+
+        <InviteBanner />
 
         <Pressable onPress={() => router.push('/profile')} style={({ pressed }) => [styles.stats, pressed && styles.pressed]}>
           <View style={styles.stat}>
@@ -95,6 +113,27 @@ export default function Home() {
           <Button label="Play TNT Toss" icon="tnt" onPress={() => router.push('/party')} />
         </Card>
 
+        <Pressable
+          onPress={() => router.push({ pathname: '/dig', params: { mode: 'weekly' } })}
+          style={({ pressed }) => [styles.weekly, pressed && styles.tilePressed]}>
+          <Row style={styles.heroTop}>
+            <Label style={styles.weeklyLabel}>Topic of the Week</Label>
+            <Text style={styles.weeklyEnds}>ends in {untilLabel(msUntilNextWeek(now))}</Text>
+          </Row>
+          <Row style={styles.weeklyRow}>
+            <Text style={styles.weeklyEmoji}>{topic.emoji}</Text>
+            <View style={styles.flex}>
+              <Text style={styles.weeklyTitle}>{topic.title}</Text>
+              <Text style={styles.tileSub}>
+                {thisWeek
+                  ? `Your dig · ${depthFor(thisWeek.score).toLocaleString()} m · see the leaderboard`
+                  : 'One scored try · weekly leaderboard'}
+              </Text>
+            </View>
+            <Icon name="chevron" size={22} color={C.muted} />
+          </Row>
+        </Pressable>
+
         <Label style={styles.section}>More ways to dig</Label>
         <View style={styles.tiles}>
           <Tile
@@ -104,7 +143,9 @@ export default function Home() {
             sub={
               today
                 ? `Dug · ${depthFor(today.score).toLocaleString()} m`
-                : 'Today’s vein is open'
+                : dugToday
+                  ? `${dugToday.toLocaleString()} miner${dugToday === 1 ? '' : 's'} dug today`
+                  : 'Today’s vein is open'
             }
             onPress={openDaily}
           />
@@ -122,10 +163,37 @@ export default function Home() {
         <Row style={styles.footer}>
           <FooterLink icon="help" label="How to dig" onPress={() => router.push('/how-to')} />
           <FooterLink icon="user" label="Miner" onPress={() => router.push('/profile')} />
+          {backendConfigured && <FooterLink icon="share" label="Invite friends" onPress={invite} />}
         </Row>
+        {inviteNote && <Text style={styles.inviteNote}>{inviteNote}</Text>}
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+/** Finished dailies today; refreshes every few minutes. Null until known or when offline. */
+function useDailyCount(digNo: number) {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!backendConfigured) return;
+    let cancelled = false;
+    const load = () =>
+      getDailyCount(digNo)
+        .then((n) => !cancelled && setCount(n))
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 180_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [digNo]);
+  return count;
+}
+
+function untilLabel(ms: number) {
+  const h = Math.max(0, Math.floor(ms / 3_600_000));
+  return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${Math.floor((ms % 3_600_000) / 60_000)}m`;
 }
 
 function MetaPill({ icon, text }: { icon: IconName; text: string }) {
@@ -244,6 +312,22 @@ const styles = StyleSheet.create({
   },
   pillText: { color: C.text, fontSize: 13, fontFamily: F.semi },
   section: { marginTop: S.sm },
+  flex: { flex: 1 },
+  weekly: {
+    gap: S.sm,
+    backgroundColor: C.surface,
+    borderColor: C.good,
+    borderWidth: 2,
+    borderBottomWidth: 5,
+    borderRadius: R.lg,
+    padding: S.md,
+  },
+  weeklyLabel: { color: C.good },
+  weeklyEnds: { color: C.muted, fontSize: 12, fontFamily: F.medium },
+  weeklyRow: { gap: S.md },
+  weeklyEmoji: { fontSize: 34 },
+  weeklyTitle: { color: C.text, fontSize: 22, fontFamily: F.display },
+  inviteNote: { color: C.muted, fontSize: 13, fontFamily: F.medium, textAlign: 'center' },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
   tile: {
     flexBasis: '46%',

@@ -13,7 +13,7 @@ import {
 import { cleanName } from './names';
 import { createStore } from './storage';
 
-export type DigMode = 'daily' | 'archive' | 'unlimited' | 'shaft';
+export type DigMode = 'daily' | 'archive' | 'unlimited' | 'shaft' | 'weekly';
 
 export interface AnswerRecord {
   promptId: string;
@@ -28,6 +28,7 @@ export interface DigResult {
   digNo?: number;
   shaftId?: string;
   level?: number;
+  weekNo?: number;
   answers: AnswerRecord[];
   score: number;
   finishedAt: number;
@@ -56,6 +57,8 @@ interface Progress {
   found?: BuddyId[];
   /** Finished digs since the last luck roll came up empty, raising the odds. */
   dryDigs?: number;
+  /** Topic of the Week results by week number (one scored try each). */
+  weekly?: Record<number, DigResult>;
 }
 
 const INITIAL: Progress = {
@@ -173,6 +176,9 @@ export function recordResult(result: DigResult): BuddyFoundList {
       next.lastDailyDig = result.digNo;
     } else if (result.mode === 'archive' && result.digNo !== undefined) {
       next.archive = { ...p.archive, [result.digNo]: result };
+    } else if (result.mode === 'weekly' && result.weekNo !== undefined) {
+      if (p.weekly?.[result.weekNo]) return p;
+      next.weekly = { ...p.weekly, [result.weekNo]: result };
     } else if (result.mode === 'shaft' && result.shaftId && result.level !== undefined) {
       next.shafts = { ...p.shafts, [shaftKey(result.shaftId, result.level)]: result };
     }

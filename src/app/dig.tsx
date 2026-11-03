@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BuddyFound } from '@/components/buddy-found';
 import { DailySocial } from '@/components/daily-social';
+import { WeeklySocial } from '@/components/weekly-social';
 import { DigReveal } from '@/components/dig-reveal';
 import { FuseBar } from '@/components/fuse-bar';
 import { Gem } from '@/components/gem';
@@ -17,7 +18,16 @@ import { Body, Button, Card, Center, Heading, IconBadge, Input, Label, Muted, Ro
 import { CATEGORY_LABELS } from '@/content';
 import { getShaft, getShaftLevel } from '@/content/shafts';
 import { useDig } from '@/hooks/use-dig';
-import { currentDigNo, digDateLabel, endlessDailyPrompts, endlessRandomPrompts } from '@/game/schedule';
+import {
+  currentDigNo,
+  currentWeekNo,
+  digDateLabel,
+  endlessDailyPrompts,
+  endlessRandomPrompts,
+  weeklyPrompts,
+  weeklyTopic,
+  weekRangeLabel,
+} from '@/game/schedule';
 import { depthFor, DIG_LIVES, SECONDS_PER_PROMPT, SHAFT_DEPTH, zoneFor } from '@/game/tiers';
 import {
   buddyFor,
@@ -45,6 +55,9 @@ interface Plan {
   digNo?: number;
   shaftId?: string;
   level?: number;
+  weekNo?: number;
+  /** Topic id of the Topic of the Week. */
+  topic?: string;
   locked: string | null;
   existing: DigResult | null;
 }
@@ -76,6 +89,21 @@ function makePlan(params: Record<string, string | undefined>): Plan {
       endless: true,
       locked: null,
       existing: null,
+    };
+  }
+  if (mode === 'weekly') {
+    const weekNo = currentWeekNo();
+    const topic = weeklyTopic(weekNo);
+    return {
+      mode,
+      weekNo,
+      topic: topic.id,
+      label: `Deepvein Weekly · ${topic.title}`,
+      title: `${topic.emoji} Topic of the Week: ${topic.title}`,
+      promptIds: weeklyPrompts(weekNo),
+      endless: true,
+      locked: null,
+      existing: p.weekly?.[weekNo] ?? null,
     };
   }
   if (mode === 'shaft') {
@@ -124,6 +152,7 @@ export default function DigScreen() {
         digNo: plan.digNo,
         shaftId: plan.shaftId,
         level: plan.level,
+        weekNo: plan.weekNo,
         answers,
         score: scoreOf(answers),
         finishedAt: Date.now(),
@@ -162,6 +191,7 @@ export default function DigScreen() {
           buddy={buddy}
           streak={result.mode === 'daily' ? progress.streak : 0}>
           {result.mode === 'daily' && <DailySocial result={result} />}
+          {result.mode === 'weekly' && plan.topic && <WeeklySocial result={result} topic={plan.topic} />}
         </ResultsView>
         {plan.mode === 'unlimited' && (
           <Button
@@ -251,6 +281,11 @@ function DigPlay({ plan, onFinish }: { plan: Plan; onFinish: (a: AnswerRecord[])
               ? `Wrong answers, passes and burnt-out fuses cost a life. Lose all ${DIG_LIVES} and the tunnel caves in, or end the dig any time.`
               : 'One attempt. The fuse lights when you tap.'}
           </Muted>
+          {plan.mode === 'weekly' && plan.weekNo !== undefined && (
+            <Muted style={styles.centerText}>
+              One scored try this week ({weekRangeLabel(plan.weekNo)}). A new topic every Monday.
+            </Muted>
+          )}
           <Button label="Light the fuse" icon="flame" onPress={begin} style={styles.wide} />
         </Center>
       </Screen>

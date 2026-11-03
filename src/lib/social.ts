@@ -120,6 +120,90 @@ export async function getFriendResults(digNo: number): Promise<FriendResult[]> {
     .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 }
 
+// ---------- Topic of the Week ----------
+
+export interface WeeklyEntry {
+  userId: string;
+  name: string;
+  score: number;
+  grid: string;
+}
+
+export async function submitWeekly(weekNo: number, topic: string, score: number, grid: string) {
+  const id = await ensureSession();
+  const { error } = await client()
+    .from('weekly_results')
+    .upsert({ user_id: id, week_no: weekNo, topic, score, grid }, { onConflict: 'user_id,week_no', ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+export async function getWeekRank(weekNo: number, score: number) {
+  await ensureSession();
+  const { data, error } = await client().rpc('week_rank', { p_week: weekNo, p_score: score });
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as { deeper: number; total: number } | undefined;
+  return row ?? { deeper: 0, total: 0 };
+}
+
+/** The week's global top list. */
+export async function getWeekTop(weekNo: number, limit = 10): Promise<WeeklyEntry[]> {
+  await ensureSession();
+  const { data, error } = await client().rpc('week_top', { p_week: weekNo, p_limit: limit });
+  if (error) throw error;
+  return ((data ?? []) as { user_id: string; display_name: string; score: number; grid: string }[]).map((r) => ({
+    userId: r.user_id,
+    name: cleanName(r.display_name),
+    score: r.score,
+    grid: r.grid,
+  }));
+}
+
+/** Friends who have played this week (visible once you've played too). */
+export async function getFriendWeekly(weekNo: number): Promise<WeeklyEntry[]> {
+  const id = await ensureSession();
+  const sb = client();
+  const { data: links, error } = await sb.from('friendships').select('friend_id').eq('user_id', id);
+  if (error) throw error;
+  const ids = (links ?? []).map((l) => l.friend_id as string);
+  if (ids.length === 0) return [];
+  const [{ data: profiles }, { data: results }] = await Promise.all([
+    sb.from('profiles').select('id, display_name').in('id', ids),
+    sb.from('weekly_results').select('user_id, score, grid').eq('week_no', weekNo).in('user_id', ids),
+  ]);
+  const names = new Map((profiles ?? []).map((p) => [p.id as string, cleanName(p.display_name)]));
+  return (results ?? [])
+    .map((r) => ({ userId: r.user_id as string, name: names.get(r.user_id) ?? 'Miner', score: r.score as number, grid: r.grid as string }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// ---------- Counters and invites ----------
+
+/** How many miners have finished today's daily. Works without signing in. */
+export async function getDailyCount(digNo: number): Promise<number> {
+  const { data, error } = await client().rpc('dig_count', { p_dig: digNo });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
+/** Name behind a friend code, for "Add X as a friend?". Null if the code is unknown or your own. */
+export async function getMinerByCode(code: string): Promise<{ id: string; name: string } | null> {
+  const me = await ensureSession();
+  const { data, error } = await client()
+    .from('profiles')
+    .select('id, display_name')
+    .eq('friend_code', code.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.id === me) return null;
+  return { id: data.id, name: cleanName(data.display_name) };
+}
+
+export async function isFriend(otherId: string) {
+  const id = await ensureSession();
+  const { data } = await client().from('friendships').select('friend_id').eq('user_id', id).eq('friend_id', otherId).maybeSingle();
+  return !!data;
+}
+
 export interface RankedEntry {
   id: string;
   name: string;

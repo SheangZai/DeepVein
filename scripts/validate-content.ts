@@ -130,7 +130,7 @@ const MATCH_CASES: [string, string, string | null][] = [
 async function main() {
   const { PROMPTS, BUILD_ISSUES } = await import('../src/content/index');
   const { matchAnswer } = await import('../src/content/build');
-  const { promptsForDig, endlessDailyPrompts } = await import('../src/game/schedule');
+  const { promptsForDig, endlessDailyPrompts, weeklyPrompts, weeklyTopic } = await import('../src/game/schedule');
   const { SHAFTS } = await import('../src/content/shafts');
   const { DAILY_V2_DIG } = await import('../src/content/added');
   let failures = 0;
@@ -189,6 +189,18 @@ async function main() {
   const late = new Set(PROMPTS.filter((p) => p.since > 1).map((p) => p.id));
   for (let dig = 1; dig < DAILY_V2_DIG; dig++) {
     if (endlessDailyPrompts(dig).slice(0, 200).some((id) => late.has(id))) fail(`dig ${dig} uses a prompt added later`);
+  }
+
+  // Topic of the Week: every week has a topic and a long, valid prompt list with no back-to-back repeats.
+  for (let week = 1; week <= 60; week++) {
+    const topic = weeklyTopic(week);
+    if (!topic) fail(`week ${week} has no topic`);
+    const list = weeklyPrompts(week);
+    if (list.length < 100) fail(`week ${week} has only ${list.length} prompts`);
+    list.forEach((id, i) => {
+      if (!PROMPTS.some((p) => p.id === id)) fail(`week ${week}: unknown prompt ${id}`);
+      if (i > 0 && list[i - 1] === id) fail(`week ${week}: ${id} twice in a row`);
+    });
   }
 
   const total = PROMPTS.reduce((n, p) => n + p.entries.length, 0);

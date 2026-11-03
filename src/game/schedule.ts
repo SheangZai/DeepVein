@@ -1,4 +1,5 @@
 import { PROMPTS } from '@/content';
+import { getShaft, type Shaft } from '@/content/shafts';
 
 import { hashString, mulberry32, shuffled } from './rng';
 import { PROMPTS_PER_DIG } from './tiers';
@@ -87,6 +88,46 @@ export function randomPrompts(exclude: string[] = []): string[] {
   const pool = PROMPTS.map((p) => p.id).filter((id) => !exclude.includes(id));
   const source = pool.length >= PROMPTS_PER_DIG ? pool : PROMPTS.map((p) => p.id);
   return shuffled(source, Math.random).slice(0, PROMPTS_PER_DIG);
+}
+
+// ---------- Topic of the Week ----------
+
+/** Week #1 starts Monday 2 Nov 2026; weeks roll over at Monday midnight (reset time zone). */
+const WEEK1_DAY = Math.floor(Date.UTC(2026, 10, 2) / DAY_MS);
+const WEEKLY_ROTATION = ['everyday', 'food', 'screen', 'sports', 'geography', 'nature', 'science', 'words'];
+
+export function currentWeekNo(now = Date.now()) {
+  return Math.floor((dayIndex(now) - WEEK1_DAY) / 7) + 1;
+}
+
+export function msUntilNextWeek(now = Date.now()) {
+  return (WEEK1_DAY + currentWeekNo(now) * 7) * DAY_MS - OFFSET_MS - now;
+}
+
+/** e.g. "2–8 Nov" */
+export function weekRangeLabel(weekNo: number) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const start = new Date((WEEK1_DAY + (weekNo - 1) * 7) * DAY_MS);
+  const end = new Date((WEEK1_DAY + (weekNo - 1) * 7 + 6) * DAY_MS);
+  const s = `${start.getUTCDate()}${start.getUTCMonth() === end.getUTCMonth() ? '' : ` ${months[start.getUTCMonth()]}`}`;
+  return `${s}–${end.getUTCDate()} ${months[end.getUTCMonth()]}`;
+}
+
+export function weeklyTopic(weekNo: number): Shaft {
+  return getShaft(WEEKLY_ROTATION[(weekNo - 1) % WEEKLY_ROTATION.length])!;
+}
+
+/** The week's challenge: every prompt of its topic in a seeded order, cycling, never one twice in a row. */
+export function weeklyPrompts(weekNo: number): string[] {
+  const pool = weeklyTopic(weekNo).levels.flatMap((l) => l.prompts);
+  const rand = mulberry32(hashString(`week:${weekNo}`));
+  const out: string[] = [];
+  for (let c = 0; c < 8; c++) {
+    const next = shuffled(pool, rand);
+    if (next[0] === out[out.length - 1]) next.push(next.shift()!);
+    out.push(...next);
+  }
+  return out;
 }
 
 export function formatCountdown(ms: number) {
